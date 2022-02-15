@@ -39,161 +39,97 @@ function Lba = tl_anomalous(dtot, dlt, dlr, dct, dcr, dlm, hts, hrs, hte, hre, h
 %     v1    06JUL16     Ivica Stevanovic, OFCOM         Modifications for P.1812
 %     v2    10NOV16     Ivica Stevanovic, OFCOM         Avoid division by
 %     zero in by beta (53)
+%     v3    09MAR21     Kostas Konstantinou, Ofcom      Allow dtot, dlt, dlr, dct, dcr, dlm, hts, hrs, hte, hre, hm, theta_t, theta_r, omega, ae, b0 to be vectors
 
 
 %% 
 
 % empirical correction to account for the increasing attenuation with
 % wavelength inducted propagation (47a)
-
 Alf = 0;
-
 if f < 0.5
     Alf = 45.375 - 137.0*f + 92.5*f*f;
 end
 
 % site-shielding diffraction losses for the interfering and interfered-with
 % stations (48)
-
 theta_t2 = theta_t - 0.1*dlt;    % eq (48a)
 theta_r2 = theta_r - 0.1*dlr;
-
-Ast = 0;
-Asr = 0;
-
-if theta_t2 > 0
-    Ast = 20*log10(1 + 0.361*theta_t2*sqrt(f*dlt)) + 0.264*theta_t2*f.^(1/3);
+Ast = zeros(size(dlt),class(dlt));
+Asr = zeros(size(dlr),class(dlr));
+IND = theta_t2 > 0;
+if any(IND)
+    Ast(IND) = 20.*log10(1+0.361.*theta_t2(IND).*sqrt(f.*dlt(IND))) + ...
+        0.264.*theta_t2(IND).*f.^(1./3);
 end
-
-if theta_r2 > 0
-    Asr = 20*log10(1 + 0.361*theta_r2*sqrt(f*dlr)) + 0.264*theta_r2*f.^(1/3);
+IND = theta_r2 > 0;
+if any(IND)
+    Asr(IND) = 20.*log10(1+0.361.*theta_r2(IND).*sqrt(f.*dlr(IND))) + ...
+        0.264.*theta_r2(IND).*f.^(1./3);
 end
 
 % over-sea surface duct coupling correction for the interfering and
 % interfered-with stations (49) 
-
-Act = 0;
-Acr = 0;
-
-if dct <= 5
-    if dct <= dlt
-        if omega >= 0.75
-            Act = -3*exp(-0.25*dct*dct)*(1+ tanh( 0.07*(50-hts) ));
-        end
-    end
+Act = zeros(size(dct),class(dct));
+Acr = zeros(size(dcr),class(dcr));
+IND = dct<=5 & dct<=dlt & omega>=0.75;
+if any(IND)
+    Act(IND) = -3 .* exp(-0.25.*dct(IND).*dct(IND)) .* ...
+        (1+tanh(0.07.*(50-hts(IND))));
 end
-
-if dcr <= 5
-    if dcr <= dlr
-        if omega >= 0.75
-            Acr = -3*exp(-0.25*dcr*dcr)*(1+ tanh( 0.07*(50-hrs) ));
-        end
-    end
+IND = dcr<=5 & dcr<=dlr & omega>=0.75;
+if any(IND)
+    Acr(IND) = -3 .* exp(-0.25.*dcr(IND).*dcr(IND)) .* ...
+        (1+tanh(0.07.*(50-hrs(IND))));
 end
 
 % specific attenuation (51)
-
-gamma_d = 5e-5 * ae * f.^(1/3);
+gamma_d = 5e-5 .* ae .* f.^(1./3);
 
 % angular distance (corrected where appropriate) (52-52a)
-
 theta_t1 = theta_t;
 theta_r1 = theta_r;
-
-if theta_t> 0.1*dlt
-    theta_t1 = 0.1*dlt;
+IND = theta_t > 0.1.*dlt;
+if any(IND)
+    theta_t1(IND) = 0.1 .* dlt(IND);
 end
-
-if theta_r > 0.1*dlr
-    theta_r1 = 0.1*dlr;
+IND = theta_r > 0.1.*dlr;
+if any(IND)
+    theta_r1(IND) = 0.1 .* dlr(IND);
 end
-
-theta1 = 1e3*dtot/ae + theta_t1 + theta_r1;   
-
-dI = min(dtot - dlt - dlr, 40);   % eq (56a)
-
-mu3 = 1;
-
-if hm > 10
-    
-    mu3 = exp( -4.6e-5 * (hm-10)*(43+6*dI) );  % eq (56)
-
-    
+theta1 = 1e3.*dtot./ae + theta_t1 + theta_r1;   
+dI = min(dtot-dlt-dlr,40);  % eq (56a)
+mu3 = ones(size(hm),class(hm));
+IND = hm > 10;
+if any(IND)
+    mu3(IND) = exp(-4.6e-5.*(hm(IND)-10).*(43+6.*dI(IND)));  % eq (56)
 end
-
-tau = 1- exp(-(4.12e-4*dlm.^2.41));       % eq (3)
-
+tau = 1 - exp(-(4.12e-4.*dlm.^2.41));  % eq (3)
 epsilon = 3.5;
-
-alpha = -0.6 - epsilon*1e-9*dtot.^(3.1)*tau;   % eq (55a)
-
-if alpha < -3.4
-    alpha = -3.4;
-end
+alpha = max(-0.6-epsilon.*1e-9.*dtot.^(3.1).*tau,-3.4);  % eq (55a)
 
 % correction for path geometry:
-
-mu2 = ( 500/ae * dtot^2/( sqrt(hte) + sqrt(hre) )^2 )^alpha; % eq (55)
-
-if mu2 > 1
-    mu2 = 1;
-end
-
-beta = b0 * mu2 * mu3;      % eq (54)
-
-%beta = max(beta, eps);      % to avoid division by zero
-
-Gamma = 1.076/(2.0058-log10(beta)).^1.012 * ...
-        exp( -( 9.51 - 4.8*log10(beta) + 0.198*(log10(beta)).^2)*1e-6*dtot^(1.13) );  % eq (53a)
+mu2 = min((500./ae.*dtot.^2./(sqrt(hte)+sqrt(hre)).^2).^alpha,1);  % eq (55)
+beta = b0 .* mu2 .* mu3;  % eq (54)
+Gamma = 1.076 ./ (2.0058-log10(beta)).^1.012 .* ...
+    exp(-(9.51-4.8.*log10(beta)+0.198.*log10(beta).^2).*1e-6.*dtot.^(1.13));  % eq (53a)
 
 % time percentage variablity (cumulative distribution):
-
-Ap = -12 + (1.2 + 3.7e-3*dtot)*log10(p/beta) + 12 * (p/beta).^Gamma;  % eq (53)
+Ap = -12 + (1.2+3.7e-3.*dtot).*log10(p./beta) + 12*(p./beta).^Gamma;  % eq (53)
 
 % time percentage and angular-distance dependent losses within the
 % anomalous propagation mechanism
-
-Adp = gamma_d*theta1 + Ap;   % eq (50)
+Adp = gamma_d.*theta1 + Ap;  % eq (50)
 
 % total of fixed coupling losses (except for local clutter losses) between
 % the antennas and the anomalous propagation structure within the
 % atmosphere (47)
-
-Af = 102.45 + 20*log10(f) + 20*log10(dlt + dlr) + Alf + Ast + Asr + Act + Acr;
+Af = 102.45 + 20.*log10(f) + 20.*log10(dlt+dlr) + Alf + Ast + Asr + ...
+    Act + Acr;
 
 % total basic transmission loss occuring during periods of anomalaous
 % propagation (46)
-
-Lba = Af + Adp ;
-
-% floatformat= '%.10g;\n';
-% fid = fopen('Lba.csv', 'w');
-% fprintf(fid,['Lba (dB);Eq (46);;' floatformat],Lba);
-% fprintf(fid,['Af (dB);Eq (47);;' floatformat],Af);
-% fprintf(fid,['Alf (dB);Eq (47a);;' floatformat],Alf);
-% fprintf(fid,['Ast (dB);Eq (48);;' floatformat],Ast);
-% fprintf(fid,['Asr (dB);Eq (48);;' floatformat],Asr);
-% fprintf(fid,['th2_t (mrad);Eq (48a);;' floatformat],theta_t2);
-% fprintf(fid,['th2_r (mrad);Eq (48a);;' floatformat],theta_r2);
-% fprintf(fid,['Act (dB);Eq (49);;' floatformat],Act);
-% fprintf(fid,['Acr (dB);Eq (49);;' floatformat],Acr);
-% fprintf(fid,['Ad(p) (dB);Eq (50);;' floatformat],Adp);
-% fprintf(fid,['gamma_d (dB/mrad);Eq (51);;' floatformat],gamma_d);
-% fprintf(fid,['th1 (mrad);Eq (52);;' floatformat],theta1);
-% fprintf(fid,['th1_t (mrad);Eq (52a);;' floatformat],theta_t1);
-% fprintf(fid,['th1_r (mrad);Eq (52a);;' floatformat],theta_r1);
-% fprintf(fid,['A(p) (dB);Eq (53);;' floatformat],Ap);
-% fprintf(fid,['Gamma ;Eq (53a);;' floatformat],Gamma);
-% fprintf(fid,['beta (%%);Eq (54);;' floatformat],beta);
-% fprintf(fid,['mu2 ;Eq (55);;' floatformat],mu2);
-% fprintf(fid,['alpha ;Eq (55a);;' floatformat],alpha);
-% fprintf(fid,['mu3 ;Eq (56);;' floatformat],mu3);
-% fprintf(fid,['dI (km);Eq (56a);;' floatformat],dI);
-% fclose(fid);
-
-
-
-
+Lba = Af + Adp;
 
 return
 end

@@ -1,4 +1,4 @@
-function Ldft = dl_se_ft(d, hte, hre, adft, f, omega)
+function Ldft = dl_se_ft(d,hte,hre,adft,f,omega,pol)
 %dl_se_ft First-term part of spherical-Earth diffraction according to ITU-R P.1812-4
 %   This function computes the first-term part of Spherical-Earth diffraction
 %   loss exceeded for p% time for antenna heights
@@ -11,6 +11,7 @@ function Ldft = dl_se_ft(d, hte, hre, adft, f, omega)
 %     adft    -   effective Earth radius (km)
 %     f       -   frequency (GHz)
 %     omega   -   fraction of the path over sea
+%     pol     -   Polarization of the signal (1) horizontal, (2) vertical
 %
 %     Output parameters:
 %     Ldft   -   The first-term spherical-Earth diffraction loss not exceeded for p% time
@@ -25,40 +26,30 @@ function Ldft = dl_se_ft(d, hte, hre, adft, f, omega)
 %     v0    23DEC15     Ivica Stevanovic, OFCOM         First implementation (P.452)
 %     v1    06JUL16     Ivica Stevanovic, OFCOM         First implementation (P.1812)
 %     v2    16DEC16     Ivica Stevanovic, OFCOM         corrected bug in dl_se_ft_inner function call (epsr and sigma were interchanged)
+%     v3    09MAR21     Kostas Konstantinou, Ofcom      d, hte, hre, adft, omega can be vectors. Additional input pol.
 
 
 %% 
-
 % First-term part of the spherical-Earth diffraction loss over land
-
-epsr = 22;
-sigma = 0.003;
-
-Ldft_land = dl_se_ft_inner(epsr, sigma, d, hte, hre, adft, f);
+IND = omega < 1;
+Ldft_land = zeros(size(d),class(d));
+if any(IND)
+    epsr = 22;
+    sigma = 0.003;
+    Ldft_land(IND) = dl_se_ft_inner(epsr,sigma,d(IND),hte(IND),hre(IND),adft(IND),f,pol);
+end
 
 % First-term part of the spherical-Earth diffraction loss over sea
-
-epsr = 80;
-sigma = 5;
-
-Ldft_sea = dl_se_ft_inner(epsr, sigma, d, hte, hre, adft, f);
-
+IND = omega > 0;
+Ldft_sea = zeros(size(d),class(d));
+if any(IND)
+    epsr = 80;
+    sigma = 5;
+    Ldft_sea(IND) = dl_se_ft_inner(epsr,sigma,d(IND),hte(IND),hre(IND),adft(IND),f,pol);
+end
 
 % First-term spherical diffraction loss 
-
-Ldft = omega * Ldft_sea + (1-omega)*Ldft_land;      % Eq (28)
-
-
-% floatformat= '%.10g;\n';
-% fid = fopen('Ldsph.csv', 'a');
-% fprintf(fid,['Ldft land hor ;Eq (28);;' floatformat],Ldft_land(1));
-% fprintf(fid,['Ldft land ver ;Eq (28);;' floatformat],Ldft_land(2));
-% fprintf(fid,['Ldft sea hor ;Eq (28);;' floatformat],Ldft_sea(1));
-% fprintf(fid,['Ldft sea ver ;Eq (28);;' floatformat],Ldft_sea(2));
-% fprintf(fid,['Ldft hor ;Eq (28);;' floatformat],Ldft(1));
-% fprintf(fid,['Ldft ver ;Eq (28);;' floatformat],Ldft(2));
-% fprintf(fid,'\n');
-% fclose(fid)
+Ldft = omega.*Ldft_sea + (1-omega).*Ldft_land;  % Eq (28)
 
 return
 end

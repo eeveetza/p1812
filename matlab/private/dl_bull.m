@@ -1,4 +1,4 @@
-function Lbull = dl_bull(d, g, hts, hrs, ap, f)
+function [Lbull,maxI] = dl_bull(d,g,hts,hrs,ap,f)
 %dl_bull Bullington part of the diffraction loss according to P.1812-4
 %   This function computes the Bullington part of the diffraction loss
 %   as defined in ITU-R P.1812-4 in 4.3.1
@@ -15,6 +15,7 @@ function Lbull = dl_bull(d, g, hts, hrs, ap, f)
 %
 %     Output parameters:
 %     Lbull   -   Bullington diffraction loss for a given path
+%     maxI    -   Path index with highest diffraction parameter
 %
 %     Example:
 %     Lbull = dl_bull(d, g, hts, hrs, ap, f)
@@ -23,79 +24,83 @@ function Lbull = dl_bull(d, g, hts, hrs, ap, f)
 %     -------------------------------------------------------------------------------
 %     v0    23DEC15     Ivica Stevanovic, OFCOM         First implementation for P.452-16
 %     v1    06JUL16     Ivica Stevanovic, OFCOM         First implementation for P.1812-4
+%     v2    09MAR21     Kostas Konstantinou, Ofcom      Input d,g can be matrices, and hts,hrs,ap can be vectors. Added maxI as output.
 
 
 %% Body of function
 
 % Effective Earth curvature Ce (km^-1)
-
-Ce = 1/ap;
+Ce = 1 ./ ap;
 
 % Wavelength in meters
-
 lambda = 0.3/f;
 
 % Complete path length
-
-dtot = d(end)-d(1);
+dtot = d(:,end) - d(:,1);
 
 % Find the intermediate profile point with the highest slope of the line
 % from the transmitter to the point
-
-di = d(2:end-1);
-gi = g(2:end-1);
-
-Stim = max((gi + 500*Ce*di.*(dtot - di) - hts)./di );           % Eq (13)
+di = d(:,2:end-1);
+gi = g(:,2:end-1);
+Stim = max((gi+500.*Ce.*di.*(dtot-di)-hts)./di,[],2);  % Eq (13)
 
 % Calculate the slope of the line from transmitter to receiver assuming a
 % LoS path
+Str = (hrs-hts) ./ dtot;  % Eq (14)
 
-Str = (hrs - hts)/dtot;                                         % Eq (14)
-
-if Stim < Str % Case 1, Path is LoS
-    
+Luc = zeros(size(Stim),class(Stim));
+IND = find(Stim<Str);
+maxI = zeros(size(Stim),'uint16');
+if ~isempty(IND)
+    % Case 1, Path is LoS
     % Find the intermediate profile point with the highest diffraction
     % parameter nu:
+    di2 = di(IND,:);
+    dtot2 = dtot(IND);
+    [numax,maxI(IND)] = max((gi(IND,:)+500.*Ce(IND).*di2.*(dtot2-di2) - ...
+        (hts(IND).*(dtot2-di2)+hrs(IND).*di2)./dtot2) .* ...
+        sqrt(0.002.*dtot2./(lambda.*di2.*(dtot2-di2))),[],2);  % Eq (15)
     
-    numax = max (...
-                  ( gi + 500*Ce*di.*(dtot - di) - ( hts*(dtot - di) + hrs*di)/dtot ) .* ...
-                   sqrt(0.002*dtot./(lambda*di.*(dtot-di))) ...   
-                 );                                             % Eq (15)
-              
-    Luc = 0;
-    if numax > -0.78
-        Luc = 6.9 + 20*log10(sqrt((numax-0.1).^2+1) + numax - 0.1);   % Eq (12), (16)
+    IND2 = numax > -0.78;
+    if any(IND2)
+        Luc(IND(IND2)) = 6.9 + ...
+            20.*log10(sqrt((numax(IND2)-0.1).^2+1)+numax(IND2)-0.1);  % Eq (12), (16)
     end
-else
+end
+IND = find(~(Stim<Str));
+if ~isempty(IND)
+    hts2 = hts(IND);
+    hrs2 = hrs(IND);
+    Stim2 = Stim(IND);
     
     % Path is transhorizon
-    
     % Find the intermediate profile point with the highest slope of the
     % line from the receiver to the point
-    
-    Srim = max((gi + 500*Ce*di.*(dtot-di)-hrs)./(dtot-di));     % Eq (17)
+    di2 = di(IND,:);
+    dtot2 = dtot(IND);
+    [Srim,maxI(IND)] = max((gi(IND,:)+500.*Ce(IND).*di2.*(dtot2-di2)-hrs2)./(dtot2-di2),[],2);  % Eq (17)
     
     % Calculate the distance of the Bullington point from the transmitter:
-    
-    dbp = (hrs - hts + Srim*dtot)/(Stim + Srim);                % Eq (18)
+    dbp = (hrs2-hts2+Srim.*dtot2) ./ (Stim2+Srim);  % Eq (18)
     
     % Calculate the diffraction parameter, nub, for the Bullington point
-    
-    nub =  ( hts + Stim*dbp - ( hts*(dtot - dbp) + hrs*dbp)/dtot ) * ...
-                   sqrt(0.002*dtot/(lambda*dbp*(dtot-dbp)));    % Eq (20)
+    nub = (hts2+Stim2.*dbp-(hts2.*(dtot2-dbp)+hrs2.*dbp)./dtot2) .* ...
+        sqrt(0.002.*dtot2./(lambda.*dbp.*(dtot2-dbp)));  % Eq (20)
     
     % The knife-edge loss for the Bullington point is given by
-              
-    Luc = 0;
-    if nub > -0.78
-        Luc = 6.9 + 20*log10(sqrt((nub-0.1).^2+1) + nub - 0.1);   % Eq (12), (20)
+    IND2 = nub > -0.78;
+    if any(IND2)
+        Luc(IND(IND2)) = 6.9 + ...
+            20.*log10(sqrt((nub(IND2)-0.1).^2+1)+nub(IND2)-0.1);  % Eq (12), (20)
     end
-    
 end
 
 % For Luc calculated using either (16) or (20), Bullington diffraction loss
 % for the path is given by
+Lbull = Luc + (1-exp(-Luc./6.0)).*(10+0.02.*dtot);  % Eq (21)
 
-Lbull = Luc + (1 - exp(-Luc/6.0))*(10+0.02*dtot);         % Eq (21)
+if nargout == 2
+    maxI = maxI + 1;
+end
 return
 end

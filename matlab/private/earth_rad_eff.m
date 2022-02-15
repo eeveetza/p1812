@@ -19,15 +19,13 @@ function   [ae, ab] = earth_rad_eff(DN)
 %     Rev   Date        Author                          Description
 %     -------------------------------------------------------------------------------
 %     v0    06JUL16     Ivica Stevanovic, OFCOM         First implementation in matlab
+%     v1    08MAR21     Kostas Konstantinou, Ofcom      DN can be a vector
 
 
-k50 = 157/(157-DN);     % (6)
-
-ae = 6371*k50;          % (7a)
-
-kbeta = 3;
-
-ab = 6371*kbeta;        % (7b)
+k50 = 157 ./ (157-DN);  % (6)
+ae = 6371 .* k50;  % (7a)
+kbeta = 3 .* ones(size(DN),class(DN));
+ab = 6371 .* kbeta;  % (7b)
 
 return
 end

@@ -12,24 +12,25 @@ function sigmaLoc = stdDev(f, h, R, wa)
 %     Rev   Date        Author                          Description
 %     -------------------------------------------------------------------------------
 %     v0    19MAR20     Ivica Stevanovic, OFCOM         Initial version
+%     v1    09MAR21     Kostas Konstantinou, Ofcom      Allow h, R to be vectors
 
 % note that there is a typo in ITU-R P.1814-5 in equation (66)
 % the coefficient multiplying f should be 0.024 and not 0.0024
 % this will be corrected at the 2020 WP 3K meeting
 
-sigmaLoc = (0.52 + 0.024 * f) * wa.^0.28;
+sigmaLoc = (0.52+0.024.*f) .* wa.^0.28 .* ones(size(h),class(h));
 
-if (h < R)
-    uh = 1;
-else
-    if (h >= R + 10)
-        uh = 0;
-    else
-        uh = 1 - (h-R)/10;
-    end
+uh = ones(size(h),class(h));
+IND = h<R & h>=R+10;
+if any(IND)
+    uh(IND) = 0;
+end
+IND = h<R & ~(h>=R+10);
+if any(IND)
+    uh(IND) = 1 - (h(IND)-R(IND))./10;
 end
 
-sigmaLoc = sigmaLoc * uh;
+sigmaLoc = sigmaLoc .* uh;
 
 return
 end

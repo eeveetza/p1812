@@ -7,28 +7,26 @@ function I = inv_cum_norm( x )
 
 %     Rev   Date        Author                          Description
 %     -------------------------------------------------------------------------------
+%     v3    09MAR21     Kostas Konstantinou, Ofcom      Allow x to be a vector
 %     v2    19MAR20     Ivica Stevanovic, OFCOM         Corrected bugs having occured when x > 0.5 
 %     v1    09DEC16     Ivica Stevanovic, OFCOM         Version P.1812-4
 %     v0    02JAN16     Ivica Stevanovic, OFCOM         Initial version P.452-16
 
-if x < 0.000001
-    x = 0.000001;
+x = min(max(x,0.000001),0.999999);
+
+IND = x <= 0.5;
+I = zeros(size(x),class(x));
+if any(IND)
+    I(IND) = T(x(IND))-C(x(IND));  %(96a)
+end
+if any(~IND)
+    I(~IND) = -(T(1-x(~IND))-C(1-x(~IND))); %(96b)
 end
 
-if x > 0.999999
-    x = 0.999999;
-end
-
-if x<= .5
-    I = T(x)-C(x);  %(96a)
-else
-    I = -(T(1-x)-C(1-x)); %(96b)
-end
-   
 return
 
     function outT = T(y)
-        outT = sqrt(-2*log(y));     %(97a)
+        outT = sqrt(-2.*log(y));     %(97a)
     return
 
     function outC = C(z)   % (97)
@@ -38,5 +36,6 @@ return
         D1 = 1.432788;
         D2 = 0.189269;
         D3 = 0.001308;
-        outC = (((C2*T(z)+C1)*T(z))+C0)/(((D3*T(z)+D2)*T(z)+D1)*T(z)+1);   %(97b)
+        outC = (((C2.*T(z)+C1).*T(z))+C0) ./ ...
+            (((D3.*T(z)+D2).*T(z)+D1).*T(z)+1);  % (97b)
     return

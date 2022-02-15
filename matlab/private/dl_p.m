@@ -1,4 +1,5 @@
-function [ Ldp, Ldb, Ld50, Lbulla50, Lbulls50, Ldsph50 ] = dl_p( d, g, hts, hrs, hstd, hsrd, f, omega, p, b0, DN, flag4 )
+function [Ldp,Ldb,Ld50,Lbulla50,Lbulls50,Ldsph50,maxI] = ...
+    dl_p(d,g,hts,hrs,hstd,hsrd,f,omega,p,b0,DN,pol,flag4,debug)
 %dl_p Diffraction loss model not exceeded for p% of time according to P.1812-4
 %   function [Ldp, Ld50, Lbulla50, Lbulls50, Ldsph50] = dl_p( d, h, hts, hrs, hstd, hsrd, ap, f, omega, p, b0, DN, flag4 )
 %
@@ -23,6 +24,7 @@ function [ Ldp, Ldb, Ld50, Lbulla50, Lbulls50, Ldsph50 ] = dl_p( d, g, hts, hrs,
 %                 quantity in this procedure
 %     flag4   -   Set to 1 if the alternative method is used to calculate Lbulls 
 %                 without using terrain profile analysis (Attachment 4 to Annex 1)
+%     pol     -   Polarization of the signal (1) horizontal, (2) vertical
  
 %
 %     Output parameters:
@@ -35,6 +37,7 @@ function [ Ldp, Ldb, Ld50, Lbulla50, Lbulls50, Ldsph50 ] = dl_p( d, g, hts, hrs,
 %     Lbulla50 -   Bullington diffraction (4.3.1) for actual terrain profile g and antenna heights
 %     Lbulls50 -   Bullington diffraction (4.3.1) with all profile heights g set to zero and modified antenna heights
 %     Ldshp50  -   Spherical diffraction (4.3.2) for the actual path d and modified antenna heights
+%     maxI     -   Path profile index of Bullington diffraction (4.3.1) for actual terrain profile g and antenna heights
 %
 %
 %     Example:
@@ -48,54 +51,47 @@ function [ Ldp, Ldb, Ld50, Lbulla50, Lbulls50, Ldsph50 ] = dl_p( d, g, hts, hrs,
 %     v2    28JUL20     Ivica Stevanovic, OFCOM         Includes Attachment 4 to Annex 1 of ITU-R P.1812-5
 %                                                       with an alternative method for computation of 
 %                                                       the spherical earth diffraction Lbs w/o terrain profile analysis
+%     v3    09MAR21     Kostas Konstantinou, Ofcom      Allow d, g to be matrices, and hts, hrs, hstd, hsrd, omega, b0, DN to be vectors. Additional input pol.
 
 
 
 %% 
-
 % Use the method in 4.3.4 to calculate diffraction loss Ld for median effective 
 % Earth radius ap = ae as given by equation (7a). Set median diffraction
 % loss to Ldp50
-
-[ae, ab] = earth_rad_eff(DN);
-
+[ae,ab] = earth_rad_eff(DN);
 ap = ae;
-
-[Ld50, Lbulla50, Lbulls50, Ldsph50] = dl_delta_bull( d, g, hts, hrs, hstd, hsrd, ap, f, omega, flag4 );
+[Ld50,Lbulla50,Lbulls50,Ldsph50,maxI] = ...
+    dl_delta_bull(d,g,hts,hrs,hstd,hsrd,ap,f,omega,pol,flag4);
 
 if p == 50
     Ldp = Ld50;
-    ap = ab;
-    Ldb = dl_delta_bull( d, g, hts, hrs, hstd, hsrd, ap, f, omega, flag4 );
+
+    if debug
+        ap = ab;
+        Ldb = dl_delta_bull(d,g,hts,hrs,hstd,hsrd,ap,f,omega,pol,flag4);
+    else
+        Ldb = [];
+    end
     return
 end
 
 if p < 50
-    
     % Use the method in 4.3.4 to calculate diffraction loss Ld for effective
     % Earth radius ap = abeta, as given in equation (7b). Set diffraction loss
     % not exceeded for beta0% time Ldb = Ld
-    
     ap = ab;
-    
-    Ldb = dl_delta_bull( d, g, hts, hrs, hstd, hsrd, ap, f, omega, flag4 );
+    Ldb = dl_delta_bull(d,g,hts,hrs,hstd,hsrd,ap,f,omega,pol,flag4);
 
     % Compute the interpolation factor Fi
-    
-    if p > b0
-        
-        Fi = inv_cum_norm(p/100) / inv_cum_norm(b0/100);   % eq (40a)
-        
-    else
-        
-        Fi = 1;                                            % eq (40a)
-        
+    Fi = ones(size(b0),class(b0));  % eq (40a)
+    IND = p > b0;
+    if any(IND)
+        Fi(IND) = inv_cum_norm(p./100) ./ inv_cum_norm(b0(IND)./100);  % eq (40a)
     end
     
     % The diffraction loss Ldp not exceeded for p% of time is now given by
-    
-    Ldp = Ld50 + Fi*(Ldb - Ld50);   % eq (41)
-    
+    Ldp = Ld50 + Fi.*(Ldb-Ld50);  % eq (41)
 end
 
 return
