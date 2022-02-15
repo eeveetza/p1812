@@ -31,6 +31,11 @@ if ~exist('read_sg3_measurements.m','file')
     addpath([s '/src/'])
 end
 
+if (isOctave)
+    page_screen_output(0);
+    page_output_immediately(1);
+end
+
 % path to the folder containing test profiles 
 test_profiles = './validation_profiles/';
  
@@ -269,7 +274,9 @@ for iname = 1 : length(filenames)
                                         sg3db.dcr, ...
                                         [], ...
                                         flag_debug, ...
-                                        sg3db.fid_log);                           
+                                        sg3db.fid_log);      
+                                   
+                                    %fprintf(1,',,%.4f,%.4f\n',sg3db.PredictedFieldStrength,sg3db.Lb)
          catch message
              disp('Input parameters out of bounds');
              

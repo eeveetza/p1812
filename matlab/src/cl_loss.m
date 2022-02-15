@@ -24,7 +24,7 @@ function Ah = cl_loss(h, R, Ct, f, ws)
 %     -------------------------------------------------------------------------------
 %     v0    07JUL16     Ivica Stevanovic, OFCOM         Initial version 
 %     v1    17OCT16     Ivica Stevanovic, OFCOM         typo in (64f): kh2 -> Kh2 corrected
-%     v2    21NOV16     Ivica Stevanovic, OFCOM         bug corrected tand -> tan
+%     v2    21NOV16     Ivica Stevanovic, OFCOM         bug corrected atan -> atand
 
 %%
 
@@ -37,7 +37,7 @@ else
         
         Knu = 0.342*sqrt(f);         % Eq (64g)
         hdif = R-h;                  % Eq (64d)
-        thclut = atan(hdif/ws);     % degrees Eq (64e)
+        thclut = atand(hdif/ws);     % degrees Eq (64e)
         nu = Knu*sqrt(hdif*thclut);  % Eq (64c)
         
         Ah = 0;

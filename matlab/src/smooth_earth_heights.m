@@ -1,6 +1,6 @@
-function [hst, hsr, hstd, hsrd, hte, hre, hm, dlt, dlr, theta_t, theta_r, theta_tot, pathtype] = smooth_earth_heights(d, h, R, htg, hrg, ae, f)
+function [hst_n, hsr_n, hst, hsr, hstd, hsrd, hte, hre, hm, dlt, dlr, theta_t, theta_r, theta_tot, pathtype] = smooth_earth_heights(d, h, R, htg, hrg, ae, f)
 %smooth_earth_heights smooth-Earth effective antenna heights according to ITU-R P.1812-4
-% [hst, hsr, hstd, hsrd, hte, hre, hm, dlt, dlr, theta_t, theta_r, theta_tot, pathtype] = smooth_earth_heights(d, h, htg, hrg, ae, f)
+% [hst_n, hsr_n, hst, hsr, hstd, hsrd, hte, hre, hm, dlt, dlr, theta_t, theta_r, theta_tot, pathtype] = smooth_earth_heights(d, h, htg, hrg, ae, f)
 % This function derives smooth-Earth effective antenna heights according to
 % Sections 4 and 5 of the Attachment 1 to Annex 1 of ITU-R P.1812-4
 %
@@ -14,6 +14,7 @@ function [hst, hsr, hstd, hsrd, hte, hre, hm, dlt, dlr, theta_t, theta_r, theta_
 %
 % Output parameters:
 %
+% hst_n, hsr_n -   Not corrected Tx and Rx antenna heigts of the smooth-Earth surface amsl (m)
 % hst, hsr     -   Tx and Rx antenna heigts of the smooth-Earth surface amsl (m)
 % hstd, hsrd   -   Tx and Rx effective antenna heigts for the diffraction model (m)
 % hte, hre     -   Tx and Rx terminal effective heights for the ducting/layer reflection model (m)
@@ -30,6 +31,7 @@ function [hst, hsr, hstd, hsrd, hte, hre, hm, dlt, dlr, theta_t, theta_r, theta_
 % v0    15JAN16     Ivica Stevanovic, OFCOM         First implementation in matlab (from P.452) 
 % v1    15JUN16     Ivica Stevanovic, OFCOM         Modifications related to LoS path (from P.452) 
 % v3    15JUN16     Ivica Stevanovic, OFCOM         Initial version for P.1812
+% v4    30MAR17     Ivica Stevanovic, OFCOM         included non-corrected values of hst and hsr (87) and (88) as suggested by tranfinite
 
 n = length(d);
 
@@ -64,6 +66,9 @@ v2 = sum(diff(d) .* (h(2:n) .* (2 * d(2:n) + d(1:n-1)) + h(1:n-1) .* (d(2:n) + 2
 
 hst = (2*v1*dtot - v2)/dtot.^2;       % Eq (87)
 hsr = (v2- v1*dtot)/dtot.^2;          % Eq (88)
+
+hst_n = hst;
+hsr_n = hsr;
 
 % Section 5.6.2 Smooth-surface heights for the diffraction model
 

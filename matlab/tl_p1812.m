@@ -31,7 +31,7 @@ function [Lb, Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, phi_t, phi_r, la
 %     phi_r   -   Latitude of Rx station (degrees)
 %     lam_t   -   Longitude of Tx station (degrees)
 %     lam_r   -   Longitude of Rx station (degrees)
-%     pol     -   polarization of the signal (1) vertical, (2) horizontal
+%     pol     -   polarization of the signal (1) horizontal, (2) vertical
 %     Ptx     -   Transmitter power (kW), default value 1 kW
 %     DN      -   The average radio-refractive index lapse-rate through the
 %                 lowest 1 km of the atmosphere (it is a positive quantity in this
@@ -87,6 +87,12 @@ function [Lb, Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, phi_t, phi_r, la
 %                                                       center calculation
 %     v3    17OCT16     Ivica Stevanovic, OFCOM         typo in cl_loss call corrected (J.Dieterle)
 %                                                       h(1)-> htg, h(end)-> hrg
+%     v4    03MAY18     Ivica Stevanovic, OFCOM         Introduced path center calculation 
+%                                                       according to Annex
+%                                                       H of ITU-R P.2001-2
+%                                                       and additional validation checks
+%     v5    28MAY18     Ivica Stevanovic, OFCOM         Corrected a bug in printing out Lbulla50 and Lbulls50 
+%                                                       (scalar and not vector values), reported by Damian Bevan
 
 
 % MATLAB Version 8.3.0.532 (R2014a) used in development of this code
@@ -123,7 +129,7 @@ check_limit(f, 0.03, 3.0, 'f [GHz]');
 check_limit(p, 1, 50, 'p [%]');
 check_limit(phi_t, -80, 80, 'phi_t [deg]');
 check_limit(htg, 1, 3000, 'htg [m]');
-check_limit(hrg, 1, 3000, 'htg [m]');
+check_limit(hrg, 1, 3000, 'hrg [m]');
 check_value(pol, [1, 2], 'Polarization (pol) ');
 %check_value(Ct, [1, 2, 3, 4, 5], 'Clutter coverage (Ct) ');
 check_value(zone, [1, 3, 4], 'Radio-climatic zone (zone) ');
@@ -281,8 +287,10 @@ end
 % Compute the path profile parameters
 % Path center latitude
 % phi_path = (phi_t + phi_r)/2;
-[phi_path, ~] = gcintermediate(phi_t, lam_t, phi_r, lam_r, 0.5);
-
+%[phi_path, ~] = gcintermediate(phi_t, lam_t, phi_r, lam_r, 0.5);
+Re = 6371;
+dpnt = 0.5*(d(end)-d(1));
+[phi_path,~] = great_circle_path(phi_r, phi_t, lam_r, lam_t, Re, dpnt);
 
 % Compute  dtm     -   the longest continuous land (inland + coastal =34) section of the great-circle path (km)
 zone_r = 34;
@@ -303,7 +311,7 @@ omega = path_fraction(d, zone, 1);
     
 % Derive parameters for the path profile analysis 
 
-[hst, hsr, hstd, hsrd, hte, hre, hm, dlt, dlr, theta_t, theta_r, theta, pathtype] = smooth_earth_heights(d, h, R, htg, hrg, ae, f);
+[hst_n, hsr_n, hst, hsr, hstd, hsrd, hte, hre, hm, dlt, dlr, theta_t, theta_r, theta, pathtype] = smooth_earth_heights(d, h, R, htg, hrg, ae, f);
 
 dtot = d(end)-d(1);
 
@@ -337,8 +345,10 @@ if (debug)
     fprintf(fid_log,['phi (deg);Eq (4);;' floatformat],phi_path);
     fprintf(fid_log,['b0 (%%);Eq (5);;' floatformat],b0);
     fprintf(fid_log,['ae (km);Eq (7a);;' floatformat],ae);
-    fprintf(fid_log,['hst (m);Eq (87);;' floatformat],hst);
-    fprintf(fid_log,['hsr (m);Eq (88);;' floatformat],hsr);
+    fprintf(fid_log,['hst (m);Eq (87);;' floatformat],hst_n);
+    fprintf(fid_log,['hsr (m);Eq (88);;' floatformat],hsr_n);
+    fprintf(fid_log,['hst (m);Eq (92a);;' floatformat],hst);
+    fprintf(fid_log,['hsr (m);Eq (92b);;' floatformat],hsr);
     fprintf(fid_log,['hstd (m);Eq (91);;' floatformat],hstd);
     fprintf(fid_log,['hsrd (m);Eq (91);;' floatformat],hsrd);
     fprintf(fid_log,['htc'' (m);Eq (37a);;' floatformat],htc-hstd);
@@ -478,8 +488,8 @@ EpPtx = Ep + 10*log10(Ptx);
     fprintf(fid_log,['Lbfs;Eq (8);;' floatformat],Lbfs);
     fprintf(fid_log,['Lb0p;Eq (10);;' floatformat],Lb0p);
     fprintf(fid_log,['Lb0b;Eq (11);;' floatformat],Lb0b);
-    fprintf(fid_log,['Lbulla (dB);Eq (21);;' floatformat],Lbulla50(pol));
-    fprintf(fid_log,['Lbulls (dB);Eq (21);;' floatformat],Lbulls50(pol));
+    fprintf(fid_log,['Lbulla (dB);Eq (21);;' floatformat],Lbulla50);
+    fprintf(fid_log,['Lbulls (dB);Eq (21);;' floatformat],Lbulls50);
     fprintf(fid_log,['Ldsph (dB);Eq (27);;' floatformat],Ldsph50(pol));
     fprintf(fid_log,['Ld50 (dB);Eq (39);;' floatformat],Ld50(pol));
     fprintf(fid_log,['Ldb (dB);Eq (39);;' floatformat],Ldb(pol));    
