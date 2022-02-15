@@ -1,15 +1,15 @@
-# MATLAB/Octave Implementation of Recommendation ITU-R P.1812-4
+# MATLAB/Octave Implementation of Recommendation ITU-R P.1812-5
 
-This code repository contains a MATLAB/Octave software implementation of [Recommendation ITU-R P.1812-4](https://www.itu.int/rec/R-REC-P.1812/en) with a path-specific propagation prediction method for point-to-area terrestrial services in the frequency range 30 MHz to 3000 MHz.  
+This code repository contains a MATLAB/Octave software implementation of [Recommendation ITU-R P.1812-5](https://www.itu.int/rec/R-REC-P.1812/en) with a path-specific propagation prediction method for point-to-area terrestrial services in the frequency range 30 MHz to 3000 MHz.  
 
-This version of the code is superseded. The reference version of the code for Recommendation ITU-R P.1812 approved by ITU-R Working Party 3K is published on [ITU-R SG 3 Software, Data, and Validation Web Page](https://www.itu.int/en/ITU-R/study-groups/rsg3/Pages/iono-tropo-spheric.aspx).
+This version of the code corresponds to the reference version  approved by ITU-R Working Party 3K and published on [ITU-R SG 3 Software, Data, and Validation Web Page](https://www.itu.int/en/ITU-R/study-groups/rsg3/Pages/iono-tropo-spheric.aspx).
 
 The following table describes the structure of the folder `./matlab/` containing the MATLAB/Octave implementation of Recommendation ITU-R P.1812.
 
 | File/Folder               | Description                                                         |
 |----------------------------|---------------------------------------------------------------------|
-|`tl_p1812.m`                | MATLAB function implementing Recommendation ITU-R P.1812-4         |
-|`validate_p1812.m`          | MATLAB script used to validate the implementation of Recommendation ITU-R P.1812-4 in `tl_p1812.m`             |
+|`tl_p1812.m`                | MATLAB function implementing Recommendation ITU-R P.1812-5          |
+|`validate_p1812.m`          | MATLAB script used to validate the implementation of Recommendation ITU-R P.1812-5 in `tl_p1812.m`             |
 |`./validation_profiles/`    | Folder containing a proposed set of terrain profiles and inputs for validation of MATLAB implementation (or any other software implementation) of this Recommendation |
 |`./validation_results/`	   | Folder containing all the results written during the transmission loss computations for the set of terrain profiles defined in the folder `./validation_profiles/` |
 |`./private/`   |             Folder containing the functions called by `tl_p1812.m` and `validate_p1812.m`|
@@ -79,8 +79,8 @@ The function `tl_p1812` can be called
 
 ## Software Versions
 The code was tested and runs on:
-* MATLAB 
-* Octave 
+* MATLAB versions 2017a and 2020a
+* Octave version 6.1.0
 
 ## References
 

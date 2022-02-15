@@ -1,14 +1,13 @@
 function [Lb, Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, phi_t, phi_r, lam_t, lam_r, pol, varargin)
-%tl_p1812 basic transmission loss according to P.1812-4
+%tl_p1812 basic transmission loss according to P.1812-5
 %   [Lb Ep] = tl_p1812(f, p, d, h, zone, htg, hrg, phi_t, phi_r, lam_t, lam_r, pol, varargin)
 %
 %   This is the MAIN function that computes the basic transmission loss not exceeded for p% time
-%   and 50% locations, including additional losses due to terminal surroundings
-%   including the field strength exceeded for p% time and 50% locations
-%   as defined in ITU-R P.1812-4. 
+%   and pL% locations, including additional losses due to terminal surroundings
+%   and the field strength exceeded for p% time and pL% locations
+%   as defined in ITU-R P.1812-5. 
 %   This function: 
 %   does not include the building entry loss (only outdoor scenarios implemented)
-%   does not include location variability
 %
 %   Other functions called from this function are in ./src/ subfolder.
 %
@@ -32,6 +31,11 @@ function [Lb, Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, phi_t, phi_r, la
 %     lam_t   -   Longitude of Tx station (degrees)
 %     lam_r   -   Longitude of Rx station (degrees)
 %     pol     -   polarization of the signal (1) horizontal, (2) vertical
+%     pL      -   Required time percentage for which the calculated basic
+%                 transmission loss is not exceeded (1% - 99%)
+%     sigmaLoc-   location variability standard deviations computed using
+%                 stdDev.m according to §4.8 and §4.10
+%                 the value of 5.5 dB used for planning Broadcasting DTT
 %     Ptx     -   Transmitter power (kW), default value 1 kW
 %     DN      -   The average radio-refractive index lapse-rate through the
 %                 lowest 1 km of the atmosphere (it is a positive quantity in this
@@ -47,6 +51,8 @@ function [Lb, Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, phi_t, phi_r, la
 %                 set to zero for a terminal on a ship or sea platform
 %     ws      -   Width of street. The value of 27 should be used unless
 %                 specific local values are available (m)
+%     flag4   -   Set to 1 if the alternative method is used to calculate Lbulls 
+%                 without using terrain profile analysis (Attachment 4 to Annex 1)
 %     debug   -   Set to 1 if the log files are to be written, 
 %                 otherwise set to default 0
 %     fid_log  -   if debug == 1, a file identifier of the log file can be
@@ -54,7 +60,7 @@ function [Lb, Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, phi_t, phi_r, la
 %                 containing a timestamp will be created
 %
 %     Output parameters:
-%     Lb     -   basic  transmission loss according to P.1812-4
+%     Lb     -   basic  transmission loss according to P.1812-5
 %     Ep     -   the field strength relative to Ptx
 %
 %     Example:
@@ -70,14 +76,14 @@ function [Lb, Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, phi_t, phi_r, la
 % 2) by explicitly invoking all the input arguments:
 %
 %   [Lb, Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, phi_t, phi_r, lam_t, lam_r, pol, ...
-%                       Ptx, DN, N0, dct, dcr, ws, debug, fid_log);
+%                       pL, sigmaLoc, Ptx, DN, N0, dct, dcr, ws, flag4, debug, fid_log);
 %
 % 3) or by explicitly omitting some of the optional input arguments:
 % 
 %   [Lb, Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, phi_t, phi_r, lam_t, lam_r, pol, ...
-%                       [], DN, N0, [], [], [], debug, fid_log);
+%                       pL, sigmaLoc, [], DN, N0, [], [], [], flag4, debug, fid_log);
 %
-% Numbers refer to Rec. ITU-R P.1812-4
+% Numbers refer to Rec. ITU-R P.1812-5
 
 %     Rev   Date        Author                          Description
 %     -------------------------------------------------------------------------------
@@ -93,9 +99,15 @@ function [Lb, Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, phi_t, phi_r, la
 %                                                       and additional validation checks
 %     v5    28MAY18     Ivica Stevanovic, OFCOM         Corrected a bug in printing out Lbulla50 and Lbulls50 
 %                                                       (scalar and not vector values), reported by Damian Bevan
+%     v6    08JUN18     Ivica Stevanovic, OFCOM         Corrected a bug (swap of long and lat coordinates in 
+%                                                       great_circle_path call, reported by Wladislaw Budynkiewicz.
+%     v7    19MAR20     Ivica Stevanovic, OFCOM         Aligned with P.1812-5, introduced location variability
+%     v8    28JUL20     Ivica Stevanovic, OFCOM         Introduced alternative method to compute Lbulls w/o using 
+%                                                       terrain profile (Attachment 4 to Annex 1)
+%                                                       
+%     
 
-
-% MATLAB Version 8.3.0.532 (R2014a) used in development of this code
+% MATLAB Version 9.2.0.556344 (R2017a) used in development of this code
 %
 % THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 % EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
@@ -112,7 +124,7 @@ function [Lb, Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, phi_t, phi_r, la
 
 
 %% Read the input arguments and check them
-Nreqmax = 22;
+Nreqmax = 25;
 Nreqmin = 14;
 
 if nargin > Nreqmax    warning(['Too many input arguments; The function requires at most ' num2str(Nreqmax) ,...
@@ -124,15 +136,27 @@ if nargin < Nreqmin
 end
 %
 
-% verify input argument values and limits
-check_limit(f, 0.03, 3.0, 'f [GHz]');
-check_limit(p, 1, 50, 'p [%]');
-check_limit(phi_t, -80, 80, 'phi_t [deg]');
-check_limit(htg, 1, 3000, 'htg [m]');
-check_limit(hrg, 1, 3000, 'hrg [m]');
-check_value(pol, [1, 2], 'Polarization (pol) ');
-%check_value(Ct, [1, 2, 3, 4, 5], 'Clutter coverage (Ct) ');
-check_value(zone, [1, 3, 4], 'Radio-climatic zone (zone) ');
+    s = pwd;
+    if ~exist('dl_bull.m','file')
+        addpath([s '/src/'])
+    end
+
+% Make sure necessary subroutines are in the path
+
+    
+
+    
+    % verify input argument values and limits
+    check_limit(f, 0.03, 3.0, 'f [GHz]');
+    check_limit(p, 1, 50, 'p [%]');
+    check_limit(phi_t, -80, 80, 'phi_t [deg]');
+    check_limit(htg, 1, 3000, 'htg [m]');
+    check_limit(hrg, 1, 3000, 'hrg [m]');
+    check_value(pol, [1, 2], 'Polarization (pol) ');
+    %check_value(Ct, [1, 2, 3, 4, 5], 'Clutter coverage (Ct) ');
+    check_value(zone, [1, 3, 4], 'Radio-climatic zone (zone) ');
+    
+
 
 NN=length(d);
 
@@ -169,12 +193,14 @@ else
 end
 
 % Optional arguments (default values)
-
+pL = 50;
+sigma = 0;
 Ptx = 1;
 DN = 45; 
 N0 = 325;
 dct = 500;
 dcr = 500;
+flag4 = 0;
 
 if zone(1) == 1 % Tx at sea
  dct = 0;
@@ -191,37 +217,52 @@ icount = Nreqmin+ 1;
 
 if nargin >=icount
     if (~isempty(varargin{1}))
-        Ptx=varargin{1};
+        pL=varargin{1};
     end
     if nargin >=icount+1
-       if(~isempty(varargin{2}))
-            DN=varargin{2};
-       end
-        if nargin >=icount + 2
+        if (~isempty(varargin{2}))
+            sigmaLoc=varargin{2};
+        end
+        if nargin >=icount+2
             if (~isempty(varargin{3}))
-                N0=varargin{3};
+                Ptx=varargin{3};
             end
-            if nargin >=icount + 3 
-                if (~isempty(varargin{4}))
-                    dct=varargin{4};
+            if nargin >=icount+3
+                if(~isempty(varargin{4}))
+                    DN=varargin{4};
                 end
                 if nargin >=icount + 4
-                   if(~isempty(varargin{5}))
-                       dcr=varargin{5};
-                   end
+                    if (~isempty(varargin{5}))
+                        N0=varargin{5};
+                    end
                     if nargin >=icount + 5
-                        if(~isempty(varargin{6}))
-                            ws=varargin{6};
+                        if (~isempty(varargin{6}))
+                            dct=varargin{6};
                         end
                         if nargin >=icount + 6
                             if(~isempty(varargin{7}))
-                                debug=varargin{7};
+                                dcr=varargin{7};
                             end
                             if nargin >=icount + 7
                                 if(~isempty(varargin{8}))
-                                    fid_log=varargin{8};
+                                    ws=varargin{8};
                                 end
-                                
+                                if nargin >=icount + 8
+                                    if(~isempty(varargin{9}))
+                                        flag4=varargin{9};
+                                    end
+                                    if nargin >=icount + 9
+                                        if(~isempty(varargin{10}))
+                                            debug=varargin{10};
+                                        end
+                                        if nargin >=icount + 10
+                                            if(~isempty(varargin{11}))
+                                                fid_log=varargin{11};
+                                            end
+                                            
+                                        end
+                                    end
+                                end
                             end
                         end
                     end
@@ -230,8 +271,8 @@ if nargin >=icount
         end
     end
 end
+check_limit(pL, 1, 99, 'pL [%]');
 
-        
 % handle number fidlog is reserved here for writing the files
 % if fidlog is already open outside of this function, the file needs to be
 % empty (nothing written), otherwise it will be closed and opened again
@@ -259,6 +300,8 @@ if (debug)
     fprintf(fid_log,['Ptx (kW);;;' floatformat],Ptx);
     fprintf(fid_log,['f (GHz);;;' floatformat],f);
     fprintf(fid_log,['p (%%);;;' floatformat],p);
+    fprintf(fid_log,['pL (%%);;;' floatformat],pL);
+    fprintf(fid_log,['sigma (dB);;;' floatformat],sigma);
     fprintf(fid_log,['phi_t (deg);;;' floatformat],phi_t);
     fprintf(fid_log,['phi_r (deg);;;' floatformat],phi_r);
     fprintf(fid_log,['lam_t (deg);;;' floatformat],lam_t);
@@ -275,14 +318,9 @@ if (debug)
     fprintf(fid_log,['Rr (m) ;;;' floatformat],R(end));
     fprintf(fid_log,['Ct Tx  ;Table 2;;' floatformat],Ct(1));
     fprintf(fid_log,['Ct Rx ;Table 2;;' floatformat],Ct(end));
-
-end            
-% Make sure necessary subroutines are in the path
-
-s = pwd;
-if ~exist('dl_bull.m','file')
-    addpath([s '/src/'])
+    
 end
+
 
 % Compute the path profile parameters
 % Path center latitude
@@ -290,7 +328,7 @@ end
 %[phi_path, ~] = gcintermediate(phi_t, lam_t, phi_r, lam_r, 0.5);
 Re = 6371;
 dpnt = 0.5*(d(end)-d(1));
-[phi_path,~] = great_circle_path(phi_r, phi_t, lam_r, lam_t, Re, dpnt);
+[~, phi_path,~] = great_circle_path(lam_r, lam_t, phi_r, phi_t, Re, dpnt);
 
 % Compute  dtm     -   the longest continuous land (inland + coastal =34) section of the great-circle path (km)
 zone_r = 34;
@@ -308,7 +346,7 @@ b0 = beta0(phi_path, dtm, dlm);
 % Compute the path fraction over sea Eq (1)
 
 omega = path_fraction(d, zone, 1);
-    
+
 % Derive parameters for the path profile analysis 
 
 [hst_n, hsr_n, hst, hsr, hstd, hsrd, hte, hre, hm, dlt, dlr, theta_t, theta_r, theta, pathtype] = smooth_earth_heights(d, h, R, htg, hrg, ae, f);
@@ -380,7 +418,7 @@ Fk = 1.0 - 0.5*( 1.0 + tanh(3.0 * kappa * (dtot-dsw)/dsw) ); % eq (58)
 
 [Lbfs, Lb0p, Lb0b] = pl_los(dtot, f, p, b0, dlt, dlr);
 
-[ Ldp, Ldb, Ld50, Lbulla50, Lbulls50, Ldsph50] = dl_p( d, g, htc, hrc, hstd, hsrd, f, omega, p, b0, DN );
+[ Ldp, Ldb, Ld50, Lbulla50, Lbulls50, Ldsph50] = dl_p( d, g, htc, hrc, hstd, hsrd, f, omega, p, b0, DN, flag4 );
 
 % The median basic transmission loss associated with diffraction Eq (42)
 
@@ -465,13 +503,17 @@ Ahr = cl_loss(hrg, R(end), Ct(end), f, ws);
 
 Lbc = Lbu + Aht + Ahr;
 
+Lloc = 0;
+
 % Location variability of losses (Section 4.8)
-% not implemented
+if zone(end) ~= 1 %Rx at sea
+    Lloc = -inv_cum_norm( pL/100 ) * sigmaLoc;
+end
 
 % Basic transmission loss not exceeded for p% time and pL% locations
 % (Sections 4.8 and 4.9) not implemented
 
-Lb = max(Lb0p, Lbc);
+Lb = max(Lb0p, Lbc + Lloc);  %  eq (71)
 
 % The field strength exceeded for p% time and pL% locations
 
