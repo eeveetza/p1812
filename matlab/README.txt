@@ -1,35 +1,42 @@
-P1812 Version 5.4 (08.04.21)
+P1812 Version 6.0 (11.02.22)
 
-MATLAB implementation of Recommendation ITU-R P.1812-5
+MATLAB implementation of Recommendation ITU-R P.1812-6
 
 GENERAL NOTES
 --------------
 
 Files and subfolders in the distribution .zip package.
 
- tl_p1812.m                  - MATLAB function implementing Recommendation ITU-R P.1812-5.
+ tl_p1812.m                  - MATLAB function implementing Recommendation ITU-R P.1812-6.
 
  validate_p1812.m            - MATLAB script used to validate the implementation of 
-                               Recommendation ITU-R P.1812-5 as defined in the file 
+                               Recommendation ITU-R P.1812-6 as defined in the file 
                                tl_p1812.m using a set of test terrain profiles provided 
                                in the folder ./validation_profiles/
 
  ./validation_profiles/	     - Folder containing a proposed set of terrain profiles for
                                validation of MATLAB implementation (or any other software
-                               implementation) of Recommendation ITU-R P.1812-5
+                               implementation) of Recommendation ITU-R P.1812-6
 
  validation_result_log.csv  - Template for reporting final and intermediate results of basic
-                               transmission loss computation according to Recommendation ITU-R P.1812-5
+                               transmission loss computation according to Recommendation ITU-R P.1812-6
 
  ./validation_results/       - Folder containing all the results written during the transmission loss
                                computations for the set of terrain profiles defined
                                in the folder ./validation_profiles/
 
- ./src/                      - Folder containing the functions used by tl_p1812.m and validate_p1812.m
+ ./private/                  - Folder containing the functions used by tl_p1812.m and validate_p1812.m
 
 
 UPDATES AND FIXES
 -----------------
+
+Version 6.0 (11.02.22)
+
+	- Aligned to ITU-R P.1812-6 (excluded terminal clutter model, aligned free-space loss, extended frequency limit)
+	- Renamed subfolder "src" into "private" which is automatically in the MATLAB search path
+	- Ensured that the variable series is a row vector in find_intervals.m
+
 Version 5.4 (08.04.21)
 
 	- Introduced location variability for outdoor propagation

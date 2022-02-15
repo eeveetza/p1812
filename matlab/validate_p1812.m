@@ -1,5 +1,5 @@
 % MATLAB script that is used to verify the implementation of 
-% Recommendation ITU-R P.1812-5 (as defined in the file tl_p1812.m and the
+% Recommendation ITU-R P.1812-6 (as defined in the file tl_p1812.m and the
 % functions called therefrom) using a set of test terrain profiles provided by the user.
 %
 % The script reads all the test profiles from the folder defined by 
@@ -12,6 +12,7 @@
 % Author: Ivica Stevanovic (IS), Federal Office of Communications, Switzerland
 % Revision History: 
 % Date            Revision
+% 11FEB22         Aligned with P.1812-6
 % 28JUL20         Introduced alternative method to compute Lbulls w/o using 
 %                 terrain profile (Attachment 4 to Annex 1)
 % 19MAR20         Modified to align to P.1812-5 
@@ -33,7 +34,7 @@ try
     % add path to the folder where the functions are defined
     s = pwd;
     if ~exist('read_sg3_measurements.m','file')
-        addpath([s '/src/'])
+        addpath([s '/private/'])
     end
     
     if (isOctave)
@@ -41,7 +42,7 @@ try
         page_output_immediately(1);
     end
 catch
-    error('Folder ./src/ does not appear to be on MATLAB search path.');
+    error('Folder ./private/ does not appear to be on Octave search path.');
 
 end
 
@@ -117,7 +118,7 @@ for iname = 1 : length(filenames)
     sg3db.debug = flag_debug;
     
     % update the data structure with the Tx Power (kW)
-    for kindex=1:sg3db.Ndata;
+    for kindex=1:sg3db.Ndata
         PERP= sg3db.ERPMaxTotal(kindex);
         HRED= sg3db.HRPred(kindex);
         PkW=10^(PERP/10)*1e-3; %kW
@@ -289,7 +290,6 @@ for iname = 1 : length(filenames)
                                         sg3db.N0, ...
                                         sg3db.dct, ...
                                         sg3db.dcr, ...
-                                        [], ...
                                         flag4, ...
                                         flag_debug, ...
                                         sg3db.fid_log);      
@@ -298,10 +298,12 @@ for iname = 1 : length(filenames)
          catch message
              disp('Input parameters out of bounds');
              
-             rethrow(message);
-             
              sg3db.Lb = NaN;
              sg3db.PredictedFieldStrength = NaN;
+             
+             rethrow(message);
+             
+
          end
         if (flag_debug)
             fclose(fid_log);

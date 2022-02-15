@@ -1,15 +1,15 @@
 function [Lb, Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, phi_t, phi_r, lam_t, lam_r, pol, varargin)
-%tl_p1812 basic transmission loss according to P.1812-5
+%tl_p1812 basic transmission loss according to P.1812-6
 %   [Lb Ep] = tl_p1812(f, p, d, h, zone, htg, hrg, phi_t, phi_r, lam_t, lam_r, pol, varargin)
 %
 %   This is the MAIN function that computes the basic transmission loss not exceeded for p% time
 %   and pL% locations, including additional losses due to terminal surroundings
 %   and the field strength exceeded for p% time and pL% locations
-%   as defined in ITU-R P.1812-5. 
+%   as defined in ITU-R P.1812-6. 
 %   This function: 
 %   does not include the building entry loss (only outdoor scenarios implemented)
 %
-%   Other functions called from this function are in ./src/ subfolder.
+%   Other functions called from this function are in ./private/ subfolder.
 %
 %     Input parameters:
 %     f       -   Frequency (GHz)
@@ -49,8 +49,6 @@ function [Lb, Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, phi_t, phi_r, la
 %     dcr         antennas to the coast along the great-circle interference path (km).
 %                 default values dct = 500 km, dcr = 500 km, or 
 %                 set to zero for a terminal on a ship or sea platform
-%     ws      -   Width of street. The value of 27 should be used unless
-%                 specific local values are available (m)
 %     flag4   -   Set to 1 if the alternative method is used to calculate Lbulls 
 %                 without using terrain profile analysis (Attachment 4 to Annex 1)
 %     debug   -   Set to 1 if the log files are to be written, 
@@ -60,7 +58,7 @@ function [Lb, Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, phi_t, phi_r, la
 %                 containing a timestamp will be created
 %
 %     Output parameters:
-%     Lb     -   basic  transmission loss according to P.1812-5
+%     Lb     -   basic  transmission loss according to P.1812-6
 %     Ep     -   the field strength relative to Ptx
 %
 %     Example:
@@ -76,14 +74,14 @@ function [Lb, Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, phi_t, phi_r, la
 % 2) by explicitly invoking all the input arguments:
 %
 %   [Lb, Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, phi_t, phi_r, lam_t, lam_r, pol, ...
-%                       pL, sigmaLoc, Ptx, DN, N0, dct, dcr, ws, flag4, debug, fid_log);
+%                       pL, sigmaLoc, Ptx, DN, N0, dct, dcr, flag4, debug, fid_log);
 %
 % 3) or by explicitly omitting some of the optional input arguments:
 % 
 %   [Lb, Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, phi_t, phi_r, lam_t, lam_r, pol, ...
-%                       pL, sigmaLoc, [], DN, N0, [], [], [], flag4, debug, fid_log);
+%                       pL, sigmaLoc, [], DN, N0, [], [], flag4, debug, fid_log);
 %
-% Numbers refer to Rec. ITU-R P.1812-5
+% Numbers refer to Rec. ITU-R P.1812-6
 
 %     Rev   Date        Author                          Description
 %     -------------------------------------------------------------------------------
@@ -104,6 +102,8 @@ function [Lb, Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, phi_t, phi_r, la
 %     v7    19MAR20     Ivica Stevanovic, OFCOM         Aligned with P.1812-5, introduced location variability
 %     v8    28JUL20     Ivica Stevanovic, OFCOM         Introduced alternative method to compute Lbulls w/o using 
 %                                                       terrain profile (Attachment 4 to Annex 1)
+%     v9    11FEB22     Ivica Stevanovic, OFCOM         Aligned with P.1812-6, renamed subfolder "src" into "private" 
+%                                                       which is automatically in MATLAB search path ..
 %                                                       
 %     
 
@@ -119,12 +119,11 @@ function [Lb, Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, phi_t, phi_r, la
 %
 % THE AUTHOR(S) AND OFCOM (CH) DO NOT PROVIDE ANY SUPPORT FOR THIS SOFTWARE
 %
-% This function calls other functions that are placed in the ./src folder
-% Test functions to verify/validate the current implementation are placed in ./test folder
+% This function calls other functions that are placed in the ./private folder
 
 
 %% Read the input arguments and check them
-Nreqmax = 25;
+Nreqmax = 24;
 Nreqmin = 14;
 
 if nargin > Nreqmax    warning(['Too many input arguments; The function requires at most ' num2str(Nreqmax) ,...
@@ -136,18 +135,16 @@ if nargin < Nreqmin
 end
 %
 
-    s = pwd;
-    if ~exist('dl_bull.m','file')
-        addpath([s '/src/'])
-    end
-
-% Make sure necessary subroutines are in the path
-
-    
+% TODO: make sure the necessary subroutines are in the Octave path
+%     s = pwd;
+%     if ~exist('dl_bull.m','file')
+%         addpath([s '/src/'])
+%     end
+ 
 
     
     % verify input argument values and limits
-    check_limit(f, 0.03, 3.0, 'f [GHz]');
+    check_limit(f, 0.03, 6.0, 'f [GHz]');
     check_limit(p, 1, 50, 'p [%]');
     check_limit(phi_t, -80, 80, 'phi_t [deg]');
     check_limit(htg, 1, 3000, 'htg [m]');
@@ -209,7 +206,7 @@ if zone(end) == 1 %Rx at sea
  dcr = 0;
 end
 
-ws = 27; 
+% ws = 27; 
 debug = 0;
 fid_log = [];
 
@@ -245,22 +242,17 @@ if nargin >=icount
                             end
                             if nargin >=icount + 7
                                 if(~isempty(varargin{8}))
-                                    ws=varargin{8};
+                                    flag4=varargin{8};
                                 end
                                 if nargin >=icount + 8
                                     if(~isempty(varargin{9}))
-                                        flag4=varargin{9};
+                                        debug=varargin{9};
                                     end
                                     if nargin >=icount + 9
                                         if(~isempty(varargin{10}))
-                                            debug=varargin{10};
+                                            fid_log=varargin{10};
                                         end
-                                        if nargin >=icount + 10
-                                            if(~isempty(varargin{11}))
-                                                fid_log=varargin{11};
-                                            end
-                                            
-                                        end
+                                        
                                     end
                                 end
                             end
@@ -268,6 +260,7 @@ if nargin >=icount
                     end
                 end
             end
+            
         end
     end
 end
@@ -309,15 +302,15 @@ if (debug)
     fprintf(fid_log,['htg (m);;;' floatformat],htg);
     fprintf(fid_log,['hrg (m);;;' floatformat],hrg);
     fprintf(fid_log,['pol;;;' '%d\n'],pol);
-    fprintf(fid_log,['ws (m);;;' floatformat],ws);
+%    fprintf(fid_log,['ws (m);;;' floatformat],ws);
     fprintf(fid_log,['DN ;;;' floatformat],DN);
     fprintf(fid_log,['N0 ;;;' floatformat],N0);
     fprintf(fid_log,['dct (km) ;;;' floatformat],dct);
     fprintf(fid_log,['dcr (km) ;;;' floatformat],dcr);
-    fprintf(fid_log,['Rt (m) ;;;' floatformat],R(1));
-    fprintf(fid_log,['Rr (m) ;;;' floatformat],R(end));
-    fprintf(fid_log,['Ct Tx  ;Table 2;;' floatformat],Ct(1));
-    fprintf(fid_log,['Ct Rx ;Table 2;;' floatformat],Ct(end));
+    fprintf(fid_log,['R2 (m) ;;;' floatformat],R(2));
+    fprintf(fid_log,['Rn-1 (m) ;;;' floatformat],R(end-1));
+    fprintf(fid_log,['Ct Tx  ;Table 2;;' floatformat],Ct(2));
+    fprintf(fid_log,['Ct Rx ;Table 2;;' floatformat],Ct(end-1));
     
 end
 
@@ -358,11 +351,16 @@ hts = h(1) + htg;
 hrs = h(end) + hrg;
 
 % Modify the path by adding representative clutter, according to Section 3.2
+% excluding the first and the last point
 g = h + R;
+g(1) = h(1);
+g(end) = h(end);
 
-%Compute htc and hrc as defined in Table 5
-htc = max(hts,g(1));
-hrc = max(hrs,g(end));
+%Compute htc and hrc as defined in Table 5 (P.1812-6)
+% htc = max(hts,g(1));
+% hrc = max(hrs,g(end));
+htc = hts;
+hrc = hrs;
 
 if (debug)
     fprintf(fid_log,';;;;\n');
@@ -416,7 +414,8 @@ kappa = 0.5;
 
 Fk = 1.0 - 0.5*( 1.0 + tanh(3.0 * kappa * (dtot-dsw)/dsw) ); % eq (58)
 
-[Lbfs, Lb0p, Lb0b] = pl_los(dtot, f, p, b0, dlt, dlr);
+%[Lbfs, Lb0p, Lb0b] = pl_los(dtot, f, p, b0, dlt, dlr);
+[Lbfs, Lb0p, Lb0b] = pl_los(dtot, hts, hrs, f, p, b0, dlt, dlr);
 
 [ Ldp, Ldb, Ld50, Lbulla50, Lbulls50, Ldsph50] = dl_p( d, g, htc, hrc, hstd, hsrd, f, omega, p, b0, DN, flag4 );
 
@@ -477,33 +476,35 @@ Lbs = tl_tropo(dtot, theta, f, p, N0);
 % Calculate the final transmission loss not exceeded for p% time
 % ignoring the effects of terminal clutter
 
-Lbu_pol = -5*log10(10.^(-0.2*Lbs) + 10.^(-0.2*Lbam)) ;  % eq (63)
+Lbc_pol = -5*log10(10.^(-0.2*Lbs) + 10.^(-0.2*Lbam)) ;  % eq (63)
 
 % choose the right polarization
 
-Lbu = Lbu_pol(pol);
+Lbc = Lbc_pol(pol);
 
-% additional losses due to terminal surroundings (Section 4.7)
+% % The additional clutter losses from are removed in P.1812-6
+% % additional losses due to terminal surroundings (Section 4.7)
+% 
+% % Parameter ws relates to the width of the street. It is set to 27 unless
+% % there is specific local information available 
+% 
+% ws = 27;
+% 
+% % Transmitter side
+% 
+% Aht = cl_loss(htg, R(1), Ct(1), f, ws);
+% 
+% % Receiver side
+% 
+% Ahr = cl_loss(hrg, R(end), Ct(end), f, ws);
+% 
+% % Basic transmission loss not exceeded for p% time and 50% locations,
+% % including the effects of terminal clutter losses
 
-% Parameter ws relates to the width of the street. It is set to 27 unless
-% there is specific local information available 
+%Lbc = Lbu + Aht + Ahr;
 
-ws = 27;
 
-% Transmitter side
-
-Aht = cl_loss(htg, R(1), Ct(1), f, ws);
-
-% Receiver side
-
-Ahr = cl_loss(hrg, R(end), Ct(end), f, ws);
-
-% Basic transmission loss not exceeded for p% time and 50% locations,
-% including the effects of terminal clutter losses
-
-Lbc = Lbu + Aht + Ahr;
-
-Lloc = 0;
+Lloc = 0; % outdoors only (67a)
 
 % Location variability of losses (Section 4.8)
 if zone(end) ~= 1 %Rx at sea
@@ -513,11 +514,11 @@ end
 % Basic transmission loss not exceeded for p% time and pL% locations
 % (Sections 4.8 and 4.9) not implemented
 
-Lb = max(Lb0p, Lbc + Lloc);  %  eq (71)
+Lb = max(Lb0p, Lbc + Lloc);  %  eq (69)
 
 % The field strength exceeded for p% time and pL% locations
 
-Ep = 199.36+ 20*log10(f) - Lb;
+Ep = 199.36+ 20*log10(f) - Lb; % eq (70)
 
 % % Scale to the transmitter power
 
@@ -547,9 +548,9 @@ EpPtx = Ep + 10*log10(Ptx);
     fprintf(fid_log,['Lbda (dB);Eq (61);;' floatformat],Lbda(pol));    
     fprintf(fid_log,['Lbam (dB);Eq (62);;' floatformat],Lbam(pol));    
     fprintf(fid_log,['Lbs (dB);Eq (44);;' floatformat],Lbs);
-    fprintf(fid_log,['Lbu (dB);Eq (63);;' floatformat],Lbu);
-    fprintf(fid_log,['Aht (dB);Eq (64);;' floatformat],Aht);
-    fprintf(fid_log,['Ahr (dB);Eq (64);;' floatformat],Ahr);
+%     fprintf(fid_log,['Lbu (dB);Eq (63);;' floatformat],Lbu);
+%     fprintf(fid_log,['Aht (dB);Eq (64);;' floatformat],Aht);
+%     fprintf(fid_log,['Ahr (dB);Eq (64);;' floatformat],Ahr);
     fprintf(fid_log,['Lbc (dB);Eq (65);;' floatformat],Lbc);
     fprintf(fid_log,['Lb (dB);Eq (71);;' floatformat],Lb);
     fprintf(fid_log,['Ep (dBuV/m);Eq (72);;' floatformat],Ep);

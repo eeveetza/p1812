@@ -37,8 +37,8 @@ Distance from first point,Gnd hgt a.m.s.l.,Coverage Code,Ground cover height,Rad
 {Begin of Profile}
 Number of Points:,963
 0,395,4,30,4
-0.1,396,4,0,4
-0.2,408,4,0,4
+0.1,396,4,30,4
+0.2,408,4,30,4
 0.3,408,4,0,4
 0.4,417,4,0,4
 0.5,430,4,0,4
@@ -996,17 +996,18 @@ Number of Points:,963
 95.7,495,4,0,4
 95.8,495,4,0,4
 95.9,495,4,0,4
-96,495,4,0,4
-96.1,495,4,0,4
+96,495,4,25,4
+96.1,495,4,25,4
 96.2,496,4,25,4
 {End of Profile}
 #
 Frequency,Tx antenna height,Tx antenna effective height,Rx antenna height,Polarisation HVC:1 2 3,Txdbm,MaxLb,Txgn,Rxgn,Rx antenna D/O,ERP_max_horiz,ERP_max_vertical,ERP_max_total,HRP_red,Time percentage,Losses relative to free space,Measured field strength,Basic transmission loss,RX height gain group,Is top height in group
 [MHz],[m],[m],[m],,[dBm],[dB],[dBi],[dBi],,[dBW],[dBW],[dBW],[dB],[%],[dB],[dBuV/m],[dB]
 {Begin of Measurements}
-30,12,,19,2,,,,,,22,,22,,1,,-2.8092,163.7117
-90,12,,19,2,,,,,,22,,22,,10,,-13.5607,184.0055
-500,12,,19,2,,,,,,22,,22,,50,,-39.3495,224.6889
-1000,12,,19,2,,,,,,22,,22,,1,,-29.2084,220.5684
-3000,12,,19,2,,,,,,22,,22,,20,,-63.5733,264.4757
+30,12,,19,2,,,,,,22,,22,,1,,9.5816,151.3208
+90,12,,19,2,,,,,,22,,22,,10,,-3.3757,173.8206
+500,12,,19,2,,,,,,22,,22,,50,,-18.5839,203.9233
+1000,12,,19,2,,,,,,22,,22,,1,,8.4228,182.9372
+3000,12,,19,2,,,,,,22,,22,,20,,-18.0189,218.9213
+6000,12,,19,2,,,,,,22,,22,,20,,-19.0325,225.9555
 {End of Measurements}
