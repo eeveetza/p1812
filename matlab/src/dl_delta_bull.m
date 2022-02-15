@@ -1,6 +1,6 @@
-function [Ld, Lbulla, Lbulls, Ldsph] = dl_delta_bull( d, g, hts, hrs, hstd, hsrd, ap, f, omega )
+function [Ld, Lbulla, Lbulls, Ldsph] = dl_delta_bull( d, g, hts, hrs, hstd, hsrd, ap, f, omega, flag4 )
 %dl_delta_bull Complete 'delta-Bullington' diffraction loss model P.1812-4
-%   function Ld = dl_delta_bull( d, h, hts, hrs, hstd, hsrd, ap, f, omega )
+%   function Ld = dl_delta_bull( d, h, hts, hrs, hstd, hsrd, ap, f, omega, flag4 )
 %
 %   This function computes the complete 'delta-Bullington' diffraction loss
 %   as defined in ITU-R P.1812-4 (Section 4.3.4)
@@ -26,15 +26,21 @@ function [Ld, Lbulla, Lbulls, Ldsph] = dl_delta_bull( d, g, hts, hrs, hstd, hsrd
 %     Lbulla -   Bullington diffraction (4.3.1) for actual terrain profile g and antenna heights
 %     Lbulls -   Bullington diffraction (4.3.1) with all profile heights g set to zero and modified antenna heights
 %     Ldshp  -   Spherical diffraction (4.3.2) for the actual path d and modified antenna heights
+%     flag4  -   Set to 1 if the alternative method is used to calculate Lbulls 
+%                without using terrain profile analysis (Attachment 4 to Annex 1)
 %
 %     Example:
-%     [Ld, Lbulla, Lbulls, Ldsph] = dl_delta_bull( d, g, hts, hrs, hstd, hsrd, ap, f, omega )
+%     [Ld, Lbulla, Lbulls, Ldsph] = dl_delta_bull( d, g, hts, hrs, hstd, hsrd, ap, f, omega, flag4)
 %       
 
 %     Rev   Date        Author                          Description
 %     -------------------------------------------------------------------------------
 %     v0    01JAN16     Ivica Stevanovic, OFCOM         Initial version (P.452)
 %     v1    06JUL16     Ivica Stevanovic, OFCOM         Modified for (P.1812)
+%     v2    28JUL20     Ivica Stevanovic, OFCOM         Includes Attachment 4 to Annex 1 of ITU-R P.1812-5
+%                                                       with an alternative method for computatino of 
+%                                                       the spherical earth diffraction Lbs w/o terrain profile analysis
+
 
 %% 
 
@@ -50,18 +56,31 @@ Lbulla = dl_bull(d, g, hts, hrs, ap, f);
 hts1 = hts - hstd;   % eq (37a)
 hrs1 = hrs - hsrd;   % eq (37b)
 h1 = zeros(size(g));
+dtot = d(end) - d(1);
 
-% where hstd and hsrd are given in 5.6.2 of Attachment 1. Set the
-% resulting Bullington diffraction loss for this smooth path to Lbulls
+% where hstd and hsrd are given in 5.6.2 of Attachment 1. 
+% 
+% Set the resulting Bullington diffraction loss for this smooth path to Lbulls
+if (flag4 == 1)
+    % compute the spherical earth diffraction Lbuls using an
+    % alternative method w/o terrain profile analysis
+    % as defined in Attachment 4 to Annex 1 of ITU-R P.1812-5
+    
+    Lbulls = dl_bull_att4(dtot, hts1, hrs1, ap, f);
 
-Lbulls = dl_bull(d, h1, hts1, hrs1, ap, f);
+else
+    % Compute Lbuls using §4.3.1
+    
+    Lbulls = dl_bull(d, h1, hts1, hrs1, ap, f);
+
+end
 
 % Use the method in 4.3.2 to calculate the spherical-Earth diffraction loss
 % for the actual path length (dtot) with 
 
 hte = hts1;             % eq (38a)
 hre = hrs1;             % eq (38b)
-dtot = d(end) - d(1);
+
 
 Ldsph = dl_se(dtot, hte, hre, ap, f, omega);
 

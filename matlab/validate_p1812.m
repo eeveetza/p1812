@@ -1,5 +1,5 @@
 % MATLAB script that is used to verify the implementation of 
-% Recommendation ITU-R P.1812-4 (as defined in the file tl_p1812.m and the
+% Recommendation ITU-R P.1812-5 (as defined in the file tl_p1812.m and the
 % functions called therefrom) using a set of test terrain profiles provided by the user.
 %
 % The script reads all the test profiles from the folder defined by 
@@ -12,6 +12,9 @@
 % Author: Ivica Stevanovic (IS), Federal Office of Communications, Switzerland
 % Revision History: 
 % Date            Revision
+% 28JUL20         Introduced alternative method to compute Lbulls w/o using 
+%                 terrain profile (Attachment 4 to Annex 1)
+% 19MAR20         Modified to align to P.1812-5 
 % 07JUL2016       Modified previous version (P.1564) for P.1812
 % 13May2016       Introduced pathinfo flag (IS)
 % 29May2015       Modified backward to forward stroke so the code runs on
@@ -25,15 +28,21 @@ clear all;
 close all;
 fclose all; 
 
-% add path to the folder where the functions are defined
-s = pwd;
-if ~exist('read_sg3_measurements.m','file')
-    addpath([s '/src/'])
-end
+try
+    
+    % add path to the folder where the functions are defined
+    s = pwd;
+    if ~exist('read_sg3_measurements.m','file')
+        addpath([s '/src/'])
+    end
+    
+    if (isOctave)
+        page_screen_output(0);
+        page_output_immediately(1);
+    end
+catch
+    error('Folder ./src/ does not appear to be on MATLAB search path.');
 
-if (isOctave)
-    page_screen_output(0);
-    page_output_immediately(1);
 end
 
 % path to the folder containing test profiles 
@@ -61,10 +70,19 @@ ClutterCode = 'GlobCover';
 flag_debug = 1;
 
 % set to 1 if the plots of the height profile are to be shown
-flag_plot = 1;
+flag_plot = 0;
 
 % pathprofile is available (=1), not available (=0)
 flag_path = 1;
+
+% set to 1 if Attachment 4 to Annex 1 is to be used for computation of 
+% the spherical earth diffraction Lbs w/o terrain profile analysis
+
+flag4 = 0;
+
+% set variabilities to zero and location percentage to 50
+pL = 50;
+sigmaLoc = 0;
 
 %% begin code
 % Collect all the filenames .csv in the folder pathname that contain the profile data
@@ -124,23 +142,22 @@ for iname = 1 : length(filenames)
     
     x=sg3db.x;
     h_gamsl=sg3db.h_gamsl;
-    
-    
+
     
     %% plot the profile
     if (flag_plot)
         figure;
         ax=axes;
-        h_plot=plot(ax,x,h_gamsl,'LineWidth',2,'Color','k');
+        plot(x,h_gamsl,'LineWidth',2,'Color','k');
         set(ax,'XLim',[min(x) max(x)]);
         hTx=sg3db.hTx;
         hRx=sg3db.hRx;
         %area(ax,x,h_gamsl)
         set(0,'DefaulttextInterpreter','none');
-        title(ax,['Tx: ' sg3db.TxSiteName ', Rx: ' sg3db.RxSiteName ', ' sg3db.TxCountry sg3db.MeasurementFileName]);
+        title(['Tx: ' sg3db.TxSiteName ', Rx: ' sg3db.RxSiteName ', ' sg3db.TxCountry sg3db.MeasurementFileName]);
         set(ax,'XGrid','on','YGrid','on');
-        xlabel(ax,'distance [km]');
-        ylabel(ax,'height [m]');
+        xlabel('distance [km]');
+        ylabel('height [m]');
     end
     
     %% plot the position of transmitter/receiver
@@ -152,9 +169,7 @@ for iname = 1 : length(filenames)
     hRx=sg3db.hRx;
     
     if(flag_plot)
-        ax=gca;
-        
-        hold(ax, 'on');
+        hold('on');
         
     end
     for dataset = 1:length(hRx)
@@ -169,15 +184,15 @@ for iname = 1 : length(filenames)
             % Transmitter
             if(flag_plot)
                 if (sg3db.first_point_transmitter)
-                    plot(ax,[ x(1) x(1)], [h_gamsl(1),h_gamsl(1)+hTx(1)],'LineWidth',2,'Color','b');
-                    plot(ax, x(1), h_gamsl(1)+hTx(1), 'Marker','v','Color','b');
-                    plot(ax,[ x(end) x(end)], [h_gamsl(end),h_gamsl(end)+hhRx],'LineWidth',2,'Color','r');
-                    plot(ax, x(end), h_gamsl(end)+hhRx, 'Marker','v','Color','r');
+                    plot([ x(1) x(1)], [h_gamsl(1),h_gamsl(1)+hTx(1)],'LineWidth',2,'Color','b');
+                    plot( x(1), h_gamsl(1)+hTx(1), 'Marker','v','Color','b');
+                    plot([ x(end) x(end)], [h_gamsl(end),h_gamsl(end)+hhRx],'LineWidth',2,'Color','r');
+                    plot( x(end), h_gamsl(end)+hhRx, 'Marker','v','Color','r');
                 else
-                    plot(ax,[ x(end) x(end)], [h_gamsl(end),h_gamsl(end)+hTx(1)],'LineWidth',2,'Color','b');
-                    plot(ax, x(end), h_gamsl(1)+hTx(1), 'Marker','v','Color','b');
-                    plot(ax,[ x(1) x(1)], [h_gamsl(1),h_gamsl(1)+hhRx],'LineWidth',2,'Color','r');
-                    plot(ax, x(1), h_gamsl(1)+hhRx, 'Marker','v','Color','r');
+                    plot([ x(end) x(end)], [h_gamsl(end),h_gamsl(end)+hTx(1)],'LineWidth',2,'Color','b');
+                    plot( x(end), h_gamsl(1)+hTx(1), 'Marker','v','Color','b');
+                    plot([ x(1) x(1)], [h_gamsl(1),h_gamsl(1)+hhRx],'LineWidth',2,'Color','r');
+                    plot( x(1), h_gamsl(1)+hhRx, 'Marker','v','Color','r');
                 end
             end
         end
@@ -267,12 +282,15 @@ for iname = 1 : length(filenames)
                                         sg3db.TxLon, ...
                                         sg3db.RxLon, ...
                                         sg3db.polHVC(dataset), ...
+                                        pL, ...
+                                        sigmaLoc, ...
                                         sg3db.TransmittedPower(dataset), ...
                                         sg3db.DN, ...
                                         sg3db.N0, ...
                                         sg3db.dct, ...
                                         sg3db.dcr, ...
                                         [], ...
+                                        flag4, ...
                                         flag_debug, ...
                                         sg3db.fid_log);      
                                    

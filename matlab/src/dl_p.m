@@ -1,9 +1,9 @@
-function [ Ldp, Ldb, Ld50, Lbulla50, Lbulls50, Ldsph50 ] = dl_p( d, g, hts, hrs, hstd, hsrd, f, omega, p, b0, DN )
+function [ Ldp, Ldb, Ld50, Lbulla50, Lbulls50, Ldsph50 ] = dl_p( d, g, hts, hrs, hstd, hsrd, f, omega, p, b0, DN, flag4 )
 %dl_p Diffraction loss model not exceeded for p% of time according to P.1812-4
-%   function [Ldp, Ld50, Lbulla50, Lbulls50, Ldsph50] = dl_p( d, h, hts, hrs, hstd, hsrd, ap, f, omega, p, b0, DN )
+%   function [Ldp, Ld50, Lbulla50, Lbulls50, Ldsph50] = dl_p( d, h, hts, hrs, hstd, hsrd, ap, f, omega, p, b0, DN, flag4 )
 %
 %   This function computes the diffraction loss not exceeded for p% of time
-%   as defined in ITU-R P.1812-4 (Section 4.3-5)
+%   as defined in ITU-R P.1812-5 (Section 4.3-5) and Attachment 4 to Annex 1
 %
 %     Input parameters:
 %     d       -   vector of distances di of the i-th profile point (km)
@@ -21,6 +21,9 @@ function [ Ldp, Ldb, Ld50, Lbulla50, Lbulls50, Ldsph50 ] = dl_p( d, g, hts, hrs,
 %     DN      -   the average radio-refractive index lapse-rate through the
 %                 lowest 1 km of the atmosphere. Note that DN is positive
 %                 quantity in this procedure
+%     flag4   -   Set to 1 if the alternative method is used to calculate Lbulls 
+%                 without using terrain profile analysis (Attachment 4 to Annex 1)
+ 
 %
 %     Output parameters:
 %     Ldp    -   diffraction loss for the general path not exceeded for p % of the time 
@@ -42,6 +45,10 @@ function [ Ldp, Ldb, Ld50, Lbulla50, Lbulls50, Ldsph50 ] = dl_p( d, g, hts, hrs,
 %     -------------------------------------------------------------------------------
 %     v0    01JAN16     Ivica Stevanovic, OFCOM         Initial version (P.452)
 %     v1    06JUL16     Ivica Stevanovic, OFCOM         Modifications according to P.1812
+%     v2    28JUL20     Ivica Stevanovic, OFCOM         Includes Attachment 4 to Annex 1 of ITU-R P.1812-5
+%                                                       with an alternative method for computation of 
+%                                                       the spherical earth diffraction Lbs w/o terrain profile analysis
+
 
 
 %% 
@@ -54,12 +61,12 @@ function [ Ldp, Ldb, Ld50, Lbulla50, Lbulls50, Ldsph50 ] = dl_p( d, g, hts, hrs,
 
 ap = ae;
 
-[Ld50, Lbulla50, Lbulls50, Ldsph50] = dl_delta_bull( d, g, hts, hrs, hstd, hsrd, ap, f, omega );
+[Ld50, Lbulla50, Lbulls50, Ldsph50] = dl_delta_bull( d, g, hts, hrs, hstd, hsrd, ap, f, omega, flag4 );
 
 if p == 50
     Ldp = Ld50;
     ap = ab;
-    Ldb = dl_delta_bull( d, g, hts, hrs, hstd, hsrd, ap, f, omega );
+    Ldb = dl_delta_bull( d, g, hts, hrs, hstd, hsrd, ap, f, omega, flag4 );
     return
 end
 
@@ -71,7 +78,7 @@ if p < 50
     
     ap = ab;
     
-    Ldb = dl_delta_bull( d, g, hts, hrs, hstd, hsrd, ap, f, omega );
+    Ldb = dl_delta_bull( d, g, hts, hrs, hstd, hsrd, ap, f, omega, flag4 );
 
     % Compute the interpolation factor Fi
     
