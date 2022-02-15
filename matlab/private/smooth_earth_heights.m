@@ -1,6 +1,6 @@
 function [hst_n, hsr_n, hst, hsr, hstd, hsrd, hte, hre, hm, dlt, dlr, theta_t, theta_r, theta_tot, pathtype] = smooth_earth_heights(d, h, R, htg, hrg, ae, f)
 %smooth_earth_heights smooth-Earth effective antenna heights according to ITU-R P.1812-4
-% [hst_n, hsr_n, hst, hsr, hstd, hsrd, hte, hre, hm, dlt, dlr, theta_t, theta_r, theta_tot, pathtype] = smooth_earth_heights(d, h, htg, hrg, ae, f)
+% [hst_n, hsr_n, hst, hsr, hstd, hsrd, hte, hre, hm, dlt, dlr, theta_t, theta_r, theta_tot, pathtype] = smooth_earth_heights(d, h, R, htg, hrg, ae, f)
 % This function derives smooth-Earth effective antenna heights according to
 % Sections 4 and 5 of the Attachment 1 to Annex 1 of ITU-R P.1812-4
 %
@@ -32,7 +32,7 @@ function [hst_n, hsr_n, hst, hsr, hstd, hsrd, hte, hre, hm, dlt, dlr, theta_t, t
 % v1    15JUN16     Ivica Stevanovic, OFCOM         Modifications related to LoS path (from P.452) 
 % v3    15JUN16     Ivica Stevanovic, OFCOM         Initial version for P.1812
 % v4    30MAR17     Ivica Stevanovic, OFCOM         included non-corrected values of hst and hsr (87) and (88) as suggested by tranfinite
-
+% v5    22MAR22     Ivica Stevanovic, OFCOM         updated to P.1812-6
 n = length(d);
 
 dtot = d(end);
@@ -42,9 +42,13 @@ hts = h(1) + htg;
 hrs = h(end) + hrg;
 
 g = h + R;
+g(1) = h(1);
+g(end) = h(end);
 
-htc = max(hts, g(1));
-hrc = max(hrs, g(end));
+%htc = max(hts, g(1));
+%hrc = max(hrs, g(end));
+htc = hts;
+hrc = hrs;
 
 % Section 5.6.1 Deriving the smooth-Earth surface
 
@@ -154,7 +158,8 @@ else  % pathtype == 1 (LoS)
     
     ii = 2:n-1;
     
-    lambda = 0.3/f;
+    % speed of light as per ITU.R P.2001
+    lambda = 0.2998/f;
     Ce = 1/ae;                                  % Section 4.3.1 supposing median effective Earth radius
     
     nu = (h(ii) + 500*Ce*d(ii).*(dtot-d(ii))- (hts*(dtot- d(ii)) + hrs *d(ii))/dtot).* ...
