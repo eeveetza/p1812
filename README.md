@@ -50,15 +50,16 @@ The function `tl_p1812_matr` can be called
 | `hrg`           | scalar double    | m      |   1 ≤ `hrg`  ≤ 3000          |  Rx antenna height above ground level |
 | `pol`           | scalar int    |       |   `pol`  = 1, 2          |  Polarization of the signal: 1 - horizontal, 2 - vertical |
 
+`d`, `h`, `R`, `Ct`, and `zone` can be matrices with as many rows M as there are profiles (each row containing information about one profile). 
 M is the number of paths with N profile points. Restriction: Each path has the same number of profile points N.
 
 The required parameters related to path center can be provided in two ways:
 
-* The latitude of the path center is either provided directly
+* The latitude of the path center is provided either directly
 
  Variable          | Type   | Units | Limits       | Description  |
 |-------------------|--------|-------|--------------|--------------|
-| `phi_path`           | array double N1x1   | deg      |   -80 ≤ `phi_path`  ≤ 80          |  Latitude of the path centre |
+| `phi_path`           | array double Mx1   | deg      |   -80 ≤ `phi_path`  ≤ 80          |  Latitude of the path centre |
 
 * or the latitudes and longitudes of the Tx and Rx are provided, in which case the path center will be computed by `tl_p1812_matrix`. 
 

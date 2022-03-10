@@ -1,35 +1,40 @@
-P1812 Version 5.4 (27.05.21)
+P1812 Version 6.0 (10.03.22)
 
-MATLAB implementation of Recommendation ITU-R P.1812-5 supporting matrix inputs
+MATLAB implementation of Recommendation ITU-R P.1812-6 supporting matrix inputs
 
 GENERAL NOTES
 --------------
 
 Files and subfolders in the distribution .zip package.
 
- tl_p1812_matr.m             - MATLAB function implementing Recommendation ITU-R P.1812-5.
+ tl_p1812_matr.m             - MATLAB function implementing Recommendation ITU-R P.1812-6.
 
  validate_p1812_matr.m       - MATLAB script used to validate the implementation of 
-                               Recommendation ITU-R P.1812-5 as defined in the file 
-                               tl_p1812.m using a set of test terrain profiles provided 
+                               Recommendation ITU-R P.1812-6 as defined in the file 
+                               tl_p1812_matr.m using a set of test terrain profiles provided 
                                in the folder ./validation_profiles/
 
  ./validation_profiles/	     - Folder containing a proposed set of terrain profiles for
                                validation of MATLAB implementation (or any other software
-                               implementation) of Recommendation ITU-R P.1812-5
+                               implementation) of Recommendation ITU-R P.1812-6
 
  validation_result_log.csv   - Template for reporting final and intermediate results of basic
-                               transmission loss computation according to Recommendation ITU-R P.1812-5
+                               transmission loss computation according to Recommendation ITU-R P.1812-6
 
  ./validation_results/       - Folder containing all the results written during the transmission loss
                                computations for the set of terrain profiles defined
                                in the folder ./validation_profiles/
 
- ./private/                  - Folder containing the functions used by tl_p1812.m and validate_p1812.m
+ ./private/                  - Folder containing the functions used by tl_p1812_matr.m and validate_p1812_matr.m
 
 
 UPDATES AND FIXES
 -----------------
+Version 6.0 (10.02.22)
+
+    - Update to 1812-6 (free-space loss for short distances, terminal clutter loss, upper frequency limit)
+    - Update to validation examples (added new validation for frequencies higher than 3 GHz, 
+                                     introduced comma instead of semi-column as csv separator)
 Version 5.4 (27.05.21)
 
 	- Introduced support for matrix inputs, improved reading and parsing input arguments

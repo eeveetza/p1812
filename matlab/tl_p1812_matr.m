@@ -1,7 +1,10 @@
 function [Lb,Ep,Ld50,maxI] = ...
     tl_p1812_matr(f,p,d,h,R,Ct,zone,htg,hrg,pol,varargin)
 %tl_p1812_matr basic transmission loss according to P.1812-6 supporting matrix inputs
-%
+% d, h, R, Ct, and zone can be matrices with as many rows as there are profiles
+% (each row containing information about one profile)
+%  Each profile must have the same number of points (= number of columns)
+%  
 %   This is the MAIN function that computes the basic transmission loss not exceeded for p% time
 %   and pL% locations, including additional losses due to terminal surroundings
 %   and the field strength exceeded for p% time and pL% locations
@@ -156,7 +159,7 @@ iP.addParameter('pL',50,@(x) isnumeric(x) && x>=1 && x<=99)
 iP.addParameter('sigma',0)
 iP.addParameter('Ptx',1)
 iP.addParameter('DN',45.*ones(NN1,1,class(d)))
-iP.addParameter('N0',325)
+iP.addParameter('N0',325.*ones(NN1,1,class(d)))
 iP.addParameter('dct',500.*ones(NN1,1,class(d)))
 iP.addParameter('dcr',500.*ones(NN1,1,class(d)))
 iP.addParameter('flag4',0)
@@ -264,29 +267,29 @@ if (debug)
 end
 
 if (debug)
-    floatformat= '%.10g;\n';
-    fprintf(fid_log,'# Parameter;Ref;;Value;\n');
-    fprintf(fid_log,['Ptx (kW);;;' floatformat],Ptx);
-    fprintf(fid_log,['f (GHz);;;' floatformat],f);
-    fprintf(fid_log,['p (%%);;;' floatformat],p);
-    fprintf(fid_log,['pL (%%);;;' floatformat],pL);
-    fprintf(fid_log,['sigma (dB);;;' floatformat],sigma);
-    fprintf(fid_log,['phi_t (deg);;;' floatformat],phi_t);
-    fprintf(fid_log,['phi_r (deg);;;' floatformat],phi_r);
-    fprintf(fid_log,['lam_t (deg);;;' floatformat],lam_t);
-    fprintf(fid_log,['lam_r (deg);;;' floatformat],lam_r);
-    fprintf(fid_log,['htg (m);;;' floatformat],htg);
-    fprintf(fid_log,['hrg (m);;;' floatformat],hrg);
-    fprintf(fid_log,['pol;;;' '%d\n'],pol);
+    floatformat= '%.10g,\n';
+    fprintf(fid_log,'# Parameter,Ref,,Value,\n');
+    fprintf(fid_log,['Ptx (kW),,,' floatformat],Ptx);
+    fprintf(fid_log,['f (GHz),,,' floatformat],f);
+    fprintf(fid_log,['p (%%),,,' floatformat],p);
+    fprintf(fid_log,['pL (%%),,,' floatformat],pL);
+    fprintf(fid_log,['sigma (dB),,,' floatformat],sigma);
+    fprintf(fid_log,['phi_t (deg),,,' floatformat],phi_t);
+    fprintf(fid_log,['phi_r (deg),,,' floatformat],phi_r);
+    fprintf(fid_log,['lam_t (deg),,,' floatformat],lam_t);
+    fprintf(fid_log,['lam_r (deg),,,' floatformat],lam_r);
+    fprintf(fid_log,['htg (m),,,' floatformat],htg);
+    fprintf(fid_log,['hrg (m),,,' floatformat],hrg);
+    fprintf(fid_log,['pol,,,' '%d,\n'],pol);
     %fprintf(fid_log,['ws (m);;;' floatformat],ws);
-    fprintf(fid_log,['DN ;;;' floatformat],DN);
-    fprintf(fid_log,['N0 ;;;' floatformat],N0);
-    fprintf(fid_log,['dct (km) ;;;' floatformat],dct);
-    fprintf(fid_log,['dcr (km) ;;;' floatformat],dcr);
-    fprintf(fid_log,['R2 (m) ;;;' floatformat],R(2));
-    fprintf(fid_log,['Rn-1 (m) ;;;' floatformat],R(end-1));
-    fprintf(fid_log,['Ct Tx  ;Table 2;;' floatformat],Ct(2));
-    fprintf(fid_log,['Ct Rx ;Table 2;;' floatformat],Ct(end-1));
+    fprintf(fid_log,['DN ,,,' floatformat],DN);
+    fprintf(fid_log,['N0 ,,,' floatformat],N0);
+    fprintf(fid_log,['dct (km) ,,,' floatformat],dct);
+    fprintf(fid_log,['dcr (km) ,,,' floatformat],dcr);
+    fprintf(fid_log,['R2 (m) ,,,' floatformat],R(2));
+    fprintf(fid_log,['Rn-1 (m) ,,,' floatformat],R(end-1));
+    fprintf(fid_log,['Ct Tx  ,Table 2,,' floatformat],Ct(2));
+    fprintf(fid_log,['Ct Rx  ,Table 2,,' floatformat],Ct(end-1));
 end
 
 
@@ -337,35 +340,35 @@ htc = hts;
 hrc = hrs;
 
 if (debug)
-    fprintf(fid_log,';;;;\n');
+    fprintf(fid_log,',,,,\n');
     %fprintf(fid_log,'# Path;Ref;;Value;\n');
-    fprintf(fid_log,['d (km);;;' floatformat],dtot);
-    fprintf(fid_log,['dlt (km);Eq (80);;' floatformat],dlt);
-    fprintf(fid_log,['dlr (km);Eq (83);;' floatformat],dlr);
-    fprintf(fid_log,['th_t (mrad);Eqs (78-79);;' floatformat],theta_t);
-    fprintf(fid_log,['th_r (mrad);Eqs (81-82);;' floatformat],theta_r);
-    fprintf(fid_log,['th (mrad);Eq (84);;' floatformat],theta);
-    fprintf(fid_log,['hts (m);;;' floatformat],hts);
-    fprintf(fid_log,['hrs (m);;;' floatformat],hrs);
-    fprintf(fid_log,['htc (m);Table 5;;' floatformat],htc);
-    fprintf(fid_log,['hrc (m);Table 5;;' floatformat],hrc);
-    fprintf(fid_log,['w;Table 5;;' floatformat],omega);
-    fprintf(fid_log,['dtm (km);Sec 3.6;;' floatformat],dtm);
-    fprintf(fid_log,['dlm (km);Sec 3.6;;' floatformat],dlm);
-    fprintf(fid_log,['phi (deg);Eq (4);;' floatformat],phi_path);
-    fprintf(fid_log,['b0 (%%);Eq (5);;' floatformat],b0);
-    fprintf(fid_log,['ae (km);Eq (7a);;' floatformat],ae);
-    fprintf(fid_log,['hst (m);Eq (87);;' floatformat],hst_n);
-    fprintf(fid_log,['hsr (m);Eq (88);;' floatformat],hsr_n);
-    fprintf(fid_log,['hst (m);Eq (92a);;' floatformat],hst);
-    fprintf(fid_log,['hsr (m);Eq (92b);;' floatformat],hsr);
-    fprintf(fid_log,['hstd (m);Eq (91);;' floatformat],hstd);
-    fprintf(fid_log,['hsrd (m);Eq (91);;' floatformat],hsrd);
-    fprintf(fid_log,['htc'' (m);Eq (37a);;' floatformat],htc-hstd);
-    fprintf(fid_log,['hrc'' (m);Eq (37b);;' floatformat],hrc-hsrd);
-    fprintf(fid_log,['hte (m);Eq (94);;' floatformat],hte);
-    fprintf(fid_log,['hre (m);Eq (94);;' floatformat],hre);
-    fprintf(fid_log,['hm (m);Eq (95);;' floatformat],hm);
+    fprintf(fid_log,['d (km),,,' floatformat],dtot);
+    fprintf(fid_log,['dlt (km),Eq (78),,' floatformat],dlt);
+    fprintf(fid_log,['dlr (km),Eq (81a),,' floatformat],dlr);
+    fprintf(fid_log,['th_t (mrad),Eqs (76-77),,' floatformat],theta_t);
+    fprintf(fid_log,['th_r (mrad),Eqs (79-80),,' floatformat],theta_r);
+    fprintf(fid_log,['th (mrad),Eq (82),,' floatformat],theta);
+    fprintf(fid_log,['hts (m),,,' floatformat],hts);
+    fprintf(fid_log,['hrs (m),,,' floatformat],hrs);
+    fprintf(fid_log,['htc (m),Table 5,,' floatformat],htc);
+    fprintf(fid_log,['hrc (m),Table 5,,' floatformat],hrc);
+    fprintf(fid_log,['w,Table 5,,' floatformat],omega);
+    fprintf(fid_log,['dtm (km),Sec 3.6,,' floatformat],dtm);
+    fprintf(fid_log,['dlm (km),Sec 3.6,,' floatformat],dlm);
+    fprintf(fid_log,['phi (deg),Eq (4),,' floatformat],phi_path);
+    fprintf(fid_log,['b0 (%%),Eq (5),,' floatformat],b0);
+    fprintf(fid_log,['ae (km),Eq (7a),,' floatformat],ae);
+    fprintf(fid_log,['hst (m),Eq (85),,' floatformat],hst_n);
+    fprintf(fid_log,['hsr (m),Eq (86),,' floatformat],hsr_n);
+    fprintf(fid_log,['hst (m),Eq (90a),,' floatformat],hst);
+    fprintf(fid_log,['hsr (m),Eq (90b),,' floatformat],hsr);
+    fprintf(fid_log,['hstd (m),Eq (89),,' floatformat],hstd);
+    fprintf(fid_log,['hsrd (m),Eq (89),,' floatformat],hsrd);
+    fprintf(fid_log,['htc'' (m),Eq (37a),,' floatformat],htc-hstd);
+    fprintf(fid_log,['hrc'' (m),Eq (37b),,' floatformat],hrc-hsrd);
+    fprintf(fid_log,['hte (m),Eq (92a),,' floatformat],hte);
+    fprintf(fid_log,['hre (m),Eq (92b),,' floatformat],hre);
+    fprintf(fid_log,['hm (m),Eq (93),,' floatformat],hm);
     fprintf(fid_log,'\n');
 end
 
@@ -471,14 +474,14 @@ Ep = 199.36 + 20.*log10(f) - Lb;
 EpPtx = Ep + 10.*log10(Ptx);
 
  if (debug)  
-    fprintf(fid_log,['Fi;Eq (40a);;' floatformat],Fi);     
-    fprintf(fid_log,['Fj;Eq (57);;' floatformat],Fj);
-    fprintf(fid_log,['Fk;Eq (58);;' floatformat],Fk);
-    fprintf(fid_log,['Lbfs;Eq (8);;' floatformat],Lbfs);
-    fprintf(fid_log,['Lb0p;Eq (10);;' floatformat],Lb0p);
-    fprintf(fid_log,['Lb0b;Eq (11);;' floatformat],Lb0b);
-    fprintf(fid_log,['Lbulla (dB);Eq (21);;' floatformat],Lbulla50);
-    fprintf(fid_log,['Lbulls (dB);Eq (21);;' floatformat],Lbulls50);
+    fprintf(fid_log,['Fi,Eq (40),,' floatformat],Fi);     
+    fprintf(fid_log,['Fj,Eq (57),,' floatformat],Fj);
+    fprintf(fid_log,['Fk,Eq (58),,' floatformat],Fk);
+    fprintf(fid_log,['Lbfs,Eq (8),,' floatformat],Lbfs);
+    fprintf(fid_log,['Lb0p,Eq (10),,' floatformat],Lb0p);
+    fprintf(fid_log,['Lb0b,Eq (11),,' floatformat],Lb0b);
+    fprintf(fid_log,['Lbulla (dB),Eq (21),,' floatformat],Lbulla50);
+    fprintf(fid_log,['Lbulls (dB),Eq (21),,' floatformat],Lbulls50);
 %     fprintf(fid_log,['Ldsph (dB);Eq (27);;' floatformat],Ldsph50(pol));
 %     fprintf(fid_log,['Ld50 (dB);Eq (39);;' floatformat],Ld50(pol));
 %     fprintf(fid_log,['Ldb (dB);Eq (39);;' floatformat],Ldb(pol));    
@@ -487,30 +490,30 @@ EpPtx = Ep + 10.*log10(Ptx);
 %     fprintf(fid_log,['Lbd (dB);Eq (43);;' floatformat],Lbd(pol));   
 %     
 %     fprintf(fid_log,['Lminb0p (dB);Eq (59);;' floatformat],Lminb0p(pol));
-fprintf(fid_log,['Ldsph (dB);Eq (27);;' floatformat],Ldsph50);
-    fprintf(fid_log,['Ld50 (dB);Eq (39);;' floatformat],Ld50);
-    fprintf(fid_log,['Ldb (dB);Eq (39);;' floatformat],Ldb);    
-    fprintf(fid_log,['Ldp (dB);Eq (41);;' floatformat],Ldp);
-    fprintf(fid_log,['Lbd50 (dB);Eq (42);;' floatformat],Lbd50);
-    fprintf(fid_log,['Lbd (dB);Eq (43);;' floatformat],Lbd);   
+fprintf(fid_log,['Ldsph (dB),Eq (27),,' floatformat],Ldsph50);
+    fprintf(fid_log,['Ld50 (dB),Eq (39),,' floatformat],Ld50);
+    fprintf(fid_log,['Ldb (dB),Eq (39),,' floatformat],Ldb);    
+    fprintf(fid_log,['Ldp (dB),Eq (41),,' floatformat],Ldp);
+    fprintf(fid_log,['Lbd50 (dB),Eq (42),,' floatformat],Lbd50);
+    fprintf(fid_log,['Lbd (dB),Eq (43),,' floatformat],Lbd);   
     
-    fprintf(fid_log,['Lminb0p (dB);Eq (59);;' floatformat],Lminb0p);
+    fprintf(fid_log,['Lminb0p (dB),Eq (59),,' floatformat],Lminb0p);
     
-    fprintf(fid_log,['Lba (dB);Eq (46);;' floatformat],Lba);
-    fprintf(fid_log,['Lminbap (dB);Eq (60);;' floatformat],Lminbap);
+    fprintf(fid_log,['Lba (dB),Eq (46),,' floatformat],Lba);
+    fprintf(fid_log,['Lminbap (dB),Eq (60),,' floatformat],Lminbap);
     
 %     fprintf(fid_log,['Lbda (dB);Eq (61);;' floatformat],Lbda(pol));    
 %     fprintf(fid_log,['Lbam (dB);Eq (62);;' floatformat],Lbam(pol));  
-    fprintf(fid_log,['Lbda (dB);Eq (61);;' floatformat],Lbda);    
-    fprintf(fid_log,['Lbam (dB);Eq (62);;' floatformat],Lbam);   
-    fprintf(fid_log,['Lbs (dB);Eq (44);;' floatformat],Lbs);
+    fprintf(fid_log,['Lbda (dB),Eq (61),,' floatformat],Lbda);    
+    fprintf(fid_log,['Lbam (dB),Eq (62),,' floatformat],Lbam);   
+    fprintf(fid_log,['Lbs (dB),Eq (44),,' floatformat],Lbs);
 %     fprintf(fid_log,['Lbu (dB);Eq (63);;' floatformat],Lbu);
 %     fprintf(fid_log,['Aht (dB);Eq (64);;' floatformat],Aht);
 %     fprintf(fid_log,['Ahr (dB);Eq (64);;' floatformat],Ahr);
-    fprintf(fid_log,['Lbc (dB);Eq (65);;' floatformat],Lbc);
-    fprintf(fid_log,['Lb (dB);Eq (71);;' floatformat],Lb);
-    fprintf(fid_log,['Ep (dBuV/m);Eq (72);;' floatformat],Ep);
-    fprintf(fid_log,['Ep (dBuV/m) w.r.t. Ptx;;;' floatformat],EpPtx);
+    fprintf(fid_log,['Lbc (dB),Eq (63),,' floatformat],Lbc);
+    fprintf(fid_log,['Lb (dB),Eq (69),,' floatformat],Lb);
+    fprintf(fid_log,['Ep (dBuV/m),Eq (70),,' floatformat],Ep);
+    fprintf(fid_log,['Ep (dBuV/m) w.r.t. Ptx,,,' floatformat],EpPtx);
  end
  
  Ep = EpPtx;
