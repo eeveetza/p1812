@@ -153,7 +153,7 @@ if any(~isTranshori)
     dtot2 = dtot(IND);
     
     theta_r(IND) = theta_rd(IND);  % Eq (81)
-    lambda = 0.3 ./ f;
+    lambda = 0.2998 ./ f; % speed of light as per ITU-R P.2001
     Ce = 1 ./ ae(IND);  % Section 4.3.1 supposing median effective Earth radius
     tmp = dtot2 - d3;
     nu = (h2(IND,:) + 500.*Ce.*d3.*tmp - ...

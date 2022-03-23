@@ -32,7 +32,8 @@ function Ldsph = dl_se(d,hte,hre,ap,f,omega,pol)
 
 %% Body of function
 % Wavelength in meters
-lambda = 0.3/f;
+% speed of light as per ITU-R P.2001
+lambda = 0.2998/f;
 
 % Calculate the marginal LoS distance for a smooth path
 dlos = sqrt(2*ap) .* (sqrt(0.001.*hte)+sqrt(0.001.*hre));  % Eq (22)
