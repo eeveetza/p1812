@@ -1,4 +1,4 @@
-P1812 Version 6.0 (10.03.22)
+P1812 Version 6.0 (23.03.22)
 
 MATLAB implementation of Recommendation ITU-R P.1812-6 supporting matrix inputs
 
@@ -30,7 +30,7 @@ Files and subfolders in the distribution .zip package.
 
 UPDATES AND FIXES
 -----------------
-Version 6.0 (10.02.22)
+Version 6.0 (23.03.22)
 
     - Update to 1812-6 (free-space loss for short distances, terminal clutter loss, upper frequency limit)
     - Update to validation examples (added new validation for frequencies higher than 3 GHz, 

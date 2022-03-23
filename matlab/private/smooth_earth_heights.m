@@ -33,7 +33,7 @@ function [hst_n, hsr_n, hst, hsr, hstd, hsrd, hte, hre, hm, dlt, dlr, theta_t, t
 % v3    15JUN16     Ivica Stevanovic, OFCOM         Initial version for P.1812
 % v4    30MAR17     Ivica Stevanovic, OFCOM         included non-corrected values of hst and hsr (87) and (88) as suggested by tranfinite
 % v5    08MAR21     Kostas Konstantinou, Ofcom      d, h, R can be matrices
-
+% v6    23MAR22     Ivica Stevanovic, OFCOM         updates on terminal clutter in P.1812-6
 n = size(d,2);
 dtot = d(:,end);
 
@@ -41,8 +41,13 @@ dtot = d(:,end);
 hts = h(:,1) + htg;
 hrs = h(:,end) + hrg;
 g = h + cast(R,class(h));
-htc = max(hts,g(:,1));
-hrc = max(hrs,g(:,end));
+%htc = max(hts,g(:,1));
+%hrc = max(hrs,g(:,end));
+
+g(:,1) = h(:,1);
+g(:, end) = h(:, end);
+htc = hts;
+hrc = hrs;
 
 % Section 5.6.1 Deriving the smooth-Earth surface
 tmp1 = d(:,2:n);
