@@ -309,7 +309,7 @@ for iname = 1 : length(filenames)
   
             % print the deviation of the predicted from the measured value,
             % Measurement folder | Measurement File | Dataset | Measured Field Strength | Predicted Field Strength | Deviation from Measurement
-            fprintf(fid_all,'%s,%s,%d,%.4f,%.4f,%.4f\n',sg3db.MeasurementFolder,sg3db.MeasurementFileName,dataset, sg3db.MeasuredFieldStrength(dataset), sg3db.PredictedFieldStrength, sg3db.PredictedFieldStrength - sg3db.MeasuredFieldStrength(dataset));
+            fprintf(fid_all,'%s,%s,%d,%.8f,%.8f,%.8f\n',sg3db.MeasurementFolder,sg3db.MeasurementFileName,dataset, sg3db.MeasuredFieldStrength(dataset), sg3db.PredictedFieldStrength, sg3db.PredictedFieldStrength - sg3db.MeasuredFieldStrength(dataset));
         end
        
      end
