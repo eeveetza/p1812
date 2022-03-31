@@ -38,9 +38,9 @@ validation_profiles,b2iseac_vertical.csv,3,19.45927687,19.45927687,0.00000000
 validation_profiles,rburg.csv,1,9.03336198,9.03336198,-0.00000000
 validation_profiles,rburg.csv,2,3.86560762,3.86560762,-0.00000000
 validation_profiles,rburg.csv,3,-1.58762765,-1.58762765,0.00000000
-validation_profiles,rburg_rural_noclutter.csv,1,8.76287498,8.76287498,0.00000000
-validation_profiles,rburg_rural_noclutter.csv,2,3.61578257,3.61578257,0.00000000
-validation_profiles,rburg_rural_noclutter.csv,3,-1.79840547,-1.79840547,-0.00000000
+validation_profiles,rburg_rural_noclutter.csv,1,9.33677916,9.33677916,0.00000000
+validation_profiles,rburg_rural_noclutter.csv,2,4.19641629,4.19641629,-0.00000000
+validation_profiles,rburg_rural_noclutter.csv,3,-1.22519380,-1.22519380,-0.00000000
 validation_profiles,rburg_rural_noclutter_los.csv,1,63.71329803,63.71329803,-0.00000000
 validation_profiles,rburg_rural_noclutter_los.csv,2,61.11347064,61.11347064,-0.00000000
 validation_profiles,rburg_rural_noclutter_los.csv,3,59.29626927,59.29626927,0.00000000
