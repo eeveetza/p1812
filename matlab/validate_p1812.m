@@ -1,39 +1,36 @@
-% MATLAB script that is used to verify the implementation of 
-% Recommendation ITU-R P.1812-5 (as defined in the file tl_p1812.m and the
+% MATLAB script that is used to verify the implementation of
+% Recommendation ITU-R P.1812-6 (as defined in the file tl_p1812.m and the
 % functions called therefrom) using a set of test terrain profiles provided by the user.
 %
-% The script reads all the test profiles from the folder defined by 
-% the variable <test_profiles>, calculates path profile parameters, 
-% computes the field strength for the input parameters defined in those files, 
-% and (in case flag_debug is set to 1) logs all the intermediate results 
-% in *.csv files (placed in the folder defined by the variable: <test_results>). 
-% Additionally, the script plots terrain profiles in case flag_plot is set to 1. 
+% The script reads all the test profiles from the folder defined by
+% the variable <test_profiles>, calculates path profile parameters,
+% computes the field strength for the input parameters defined in those files,
+% and (in case flag_debug is set to 1) logs all the intermediate results
+% in *.csv files (placed in the folder defined by the variable: <test_results>).
+% Additionally, the script plots terrain profiles in case flag_plot is set to 1.
 %
 % Author: Ivica Stevanovic (IS), Federal Office of Communications, Switzerland
-% Revision History: 
+% Revision History:
 % Date            Revision
-% 28JUL20         Introduced alternative method to compute Lbulls w/o using 
+% 11FEB22         Aligned with ITU-R P.1812-6
+% 28JUL20         Introduced alternative method to compute Lbulls w/o using
 %                 terrain profile (Attachment 4 to Annex 1)
-% 19MAR20         Modified to align to P.1812-5 
-% 07JUL2016       Modified previous version (P.1564) for P.1812
-% 13May2016       Introduced pathinfo flag (IS)
-% 29May2015       Modified backward to forward stroke so the code runs on
-%                 Linux as suggested by M. Rohner (IS) 
-% 29Apr2015       Introduced 'default' as an option in ClutterCode (IS)
-% 26Nov2014       Initial version (IS)
+% 19MAR20         Modified to align to ITU-R P.1812-5
+% 07JUL16         Initial version for ITU-R P.1812-4
+
 
 %% Input variables
 
 clear all;
 close all;
-fclose all; 
+fclose all;
 
 try
     
     % add path to the folder where the functions are defined
     s = pwd;
     if ~exist('read_sg3_measurements.m','file')
-        addpath([s '/src/'])
+        addpath([s '/private/'])
     end
     
     if (isOctave)
@@ -41,20 +38,20 @@ try
         page_output_immediately(1);
     end
 catch
-    error('Folder ./src/ does not appear to be on MATLAB search path.');
-
+    error('Folder ./private/ does not appear to be on Octave search path.');
+    
 end
 
-% path to the folder containing test profiles 
+% path to the folder containing test profiles
 test_profiles = './validation_profiles/';
- 
+
 % path to the folder where the resulting log files will be saved
 test_results = './validation_results/';
 
 % format of the test profile (measurement) files
 fileformat='Fryderyk_csv';
 
-% Clutter code type 
+% Clutter code type
 
 ClutterCode = 'GlobCover';
 
@@ -75,14 +72,14 @@ flag_plot = 0;
 % pathprofile is available (=1), not available (=0)
 flag_path = 1;
 
-% set to 1 if Attachment 4 to Annex 1 is to be used for computation of 
+% set to 1 if Attachment 4 to Annex 1 is to be used for computation of
 % the spherical earth diffraction Lbs w/o terrain profile analysis
 
 flag4 = 0;
 
 % set variabilities to zero and location percentage to 50
 pL = 50;
-sigmaLoc = 0;
+sigmaL = 0;
 
 %% begin code
 % Collect all the filenames .csv in the folder pathname that contain the profile data
@@ -96,7 +93,7 @@ if (flag_debug==1)
     if (fid_all == -1)
         error('The file combined_results.csv could not be opened');
     end
-    fprintf(fid_all,'%% %s;%s;%s;%s;%s;%s;\n','Folder','Filename','Dataset #','Reference','Predicted','Deviation: Predicted-Reference');
+    fprintf(fid_all,'%s,%s,%s,%s,%s,%s\n','Folder','Filename','Dataset #','Reference','Predicted','Deviation: Predicted-Reference');
 end
 
 if (length(filenames) < 1)
@@ -113,11 +110,11 @@ for iname = 1 : length(filenames)
     % read the file and populate sg3db input data structure
     
     sg3db=read_sg3_measurements([test_profiles filename1],fileformat);
-
+    
     sg3db.debug = flag_debug;
     
     % update the data structure with the Tx Power (kW)
-    for kindex=1:sg3db.Ndata;
+    for kindex=1:sg3db.Ndata
         PERP= sg3db.ERPMaxTotal(kindex);
         HRED= sg3db.HRPred(kindex);
         PkW=10^(PERP/10)*1e-3; %kW
@@ -135,14 +132,14 @@ for iname = 1 : length(filenames)
         
         sg3db.TransmittedPower(kindex)=PkW;
     end
-  
+    
     sg3db.ClutterCode=[];
     
     % plot the height profile
     
     x=sg3db.x;
     h_gamsl=sg3db.h_gamsl;
-
+    
     
     %% plot the profile
     if (flag_plot)
@@ -197,7 +194,7 @@ for iname = 1 : length(filenames)
             end
         end
         
-    
+        
         
         if(~isempty(sg3db.coveragecode))
             
@@ -208,7 +205,7 @@ for iname = 1 : length(filenames)
             i=sg3db.coveragecode(1);
             [TxClutterCode TxP1546Clutter R1external] = clutter(i, ClutterCode);
             
-           
+            
             sg3db.RxClutterCodeP1546 = RxP1546Clutter;
             
             if(~isempty(sg3db.h_ground_cover))
@@ -240,10 +237,10 @@ for iname = 1 : length(filenames)
             end
         end
         
-%         % Execute P.1812
+        %         % Execute P.1812
         fid_log = -1;
         if (flag_debug)
-
+            
             filename2 = [test_results filename1(1:end-4) '_'  num2str(dataset) '.csv'];
             fid_log = fopen(filename2, 'w');
             if (fid_log == -1)
@@ -253,66 +250,68 @@ for iname = 1 : length(filenames)
         end
         
         sg3db.fid_log = fid_log;
-%         
-
-         sg3db.dct = 500;
-         sg3db.dcr = 500;
-         
-         if sg3db.radio_met_code(1) == 1 % Tx at sea
-             sg3db.dct = 0;
-         end
-         
-         if sg3db.radio_met_code(end) == 1 %Rx at sea
-             sg3db.dcr = 0;
-         end
-         try
-         
-         [sg3db.Lb, sg3db.PredictedFieldStrength] = tl_p1812( ...
-                                        sg3db.frequency(dataset)/1e3, ...  %sg3db.frequency is in MHz, tl_p1812 needs GHz
-                                        sg3db.TimePercent(dataset), ...
-                                        sg3db.x, ...
-                                        sg3db.h_gamsl, ...
-                                        sg3db.h_ground_cover, ...
-                                        sg3db.coveragecode, ...
-                                        sg3db.radio_met_code,...
-                                        sg3db.hTx(dataset), ...
-                                        sg3db.hRx(dataset), ...
-                                        sg3db.TxLat, ...
-                                        sg3db.RxLat, ...
-                                        sg3db.TxLon, ...
-                                        sg3db.RxLon, ...
-                                        sg3db.polHVC(dataset), ...
-                                        pL, ...
-                                        sigmaLoc, ...
-                                        sg3db.TransmittedPower(dataset), ...
-                                        sg3db.DN, ...
-                                        sg3db.N0, ...
-                                        sg3db.dct, ...
-                                        sg3db.dcr, ...
-                                        [], ...
-                                        flag4, ...
-                                        flag_debug, ...
-                                        sg3db.fid_log);      
-                                   
-                                    %fprintf(1,',,%.4f,%.4f\n',sg3db.PredictedFieldStrength,sg3db.Lb)
-         catch message
-             disp('Input parameters out of bounds');
-             
-             rethrow(message);
-             
-             sg3db.Lb = NaN;
-             sg3db.PredictedFieldStrength = NaN;
-         end
+        %
+        
+        sg3db.dct = 500;
+        sg3db.dcr = 500;
+        
+        if sg3db.radio_met_code(1) == 1 % Tx at sea
+            sg3db.dct = 0;
+        end
+        
+        if sg3db.radio_met_code(end) == 1 %Rx at sea
+            sg3db.dcr = 0;
+        end
+        try
+            
+            [sg3db.Lb, sg3db.PredictedFieldStrength] = tl_p1812( ...
+                sg3db.frequency(dataset)/1e3, ...  %sg3db.frequency is in MHz, tl_p1812 needs GHz
+                sg3db.TimePercent(dataset), ...
+                sg3db.x, ...
+                sg3db.h_gamsl, ...
+                sg3db.h_ground_cover, ...
+                sg3db.coveragecode, ...
+                sg3db.radio_met_code,...
+                sg3db.hTx(dataset), ...
+                sg3db.hRx(dataset), ...
+                sg3db.polHVC(dataset), ...
+                'phi_t', sg3db.TxLat, ...
+                'phi_r', sg3db.RxLat, ...
+                'lam_t', sg3db.TxLon, ...
+                'lam_r', sg3db.RxLon, ...
+                'pL', pL, ...
+                'sigmaL', sigmaL, ...
+                'Ptx', sg3db.TransmittedPower(dataset), ...
+                'DN', sg3db.DN, ...
+                'N0', sg3db.N0, ...
+                'dct', sg3db.dct, ...
+                'dcr', sg3db.dcr, ...
+                'flag4', flag4, ...
+                'debug', flag_debug, ...
+                'fid_log', sg3db.fid_log);
+            
+            %fprintf(1,',,%.8f,%.8f\n',sg3db.PredictedFieldStrength,sg3db.Lb)
+        catch message
+            disp('Input parameters out of bounds');
+            
+            sg3db.Lb = NaN;
+            sg3db.PredictedFieldStrength = NaN;
+            
+            rethrow(message);
+            
+            
+        end
         if (flag_debug)
             fclose(fid_log);
-  
+            
             % print the deviation of the predicted from the measured value,
             % Measurement folder | Measurement File | Dataset | Measured Field Strength | Predicted Field Strength | Deviation from Measurement
-            fprintf(fid_all,'%s;%s;%d;%.4f;%.4f;%.4f\n',sg3db.MeasurementFolder,sg3db.MeasurementFileName,dataset, sg3db.MeasuredFieldStrength(dataset), sg3db.PredictedFieldStrength, sg3db.PredictedFieldStrength - sg3db.MeasuredFieldStrength(dataset));
+            fprintf(fid_all,'%s,%s,%d,%.8f,%.8f,%.8f\n',sg3db.MeasurementFolder,sg3db.MeasurementFileName,dataset, sg3db.MeasuredFieldStrength(dataset), sg3db.PredictedFieldStrength, sg3db.PredictedFieldStrength - sg3db.MeasuredFieldStrength(dataset));
+            
         end
-       
-     end
- end % for all files in ./tests
+        
+    end
+end % for all files in ./tests
 
 if (flag_debug)
     fclose(fid_all);

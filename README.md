@@ -1,8 +1,8 @@
-# MATLAB/Octave Implementation of Recommendation ITU-R P.1812-5
+# MATLAB/Octave Implementation of Recommendation ITU-R P.1812-6
 
 [![DOI](https://zenodo.org/badge/459641442.svg)](https://zenodo.org/badge/latestdoi/459641442)
 
-This code repository contains a MATLAB/Octave software implementation of [Recommendation ITU-R P.1812-5](https://www.itu.int/rec/R-REC-P.1812/en) with a path-specific propagation prediction method for point-to-area terrestrial services in the frequency range 30 MHz to 3000 MHz.  
+This code repository contains a MATLAB/Octave software implementation of [Recommendation ITU-R P.1812-6](https://www.itu.int/rec/R-REC-P.1812/en) with a path-specific propagation prediction method for point-to-area terrestrial services in the frequency range 30 MHz to 6000 MHz.  
 
 This version of the code corresponds to the reference version  approved by ITU-R Working Party 3K and published on [ITU-R SG 3 Software, Data, and Validation Web Page](https://www.itu.int/en/ITU-R/study-groups/rsg3/Pages/iono-tropo-spheric.aspx).
 
@@ -10,8 +10,8 @@ The following table describes the structure of the folder `./matlab/` containing
 
 | File/Folder               | Description                                                         |
 |----------------------------|---------------------------------------------------------------------|
-|`tl_p1812.m`                | MATLAB function implementing Recommendation ITU-R P.1812-5          |
-|`validate_p1812.m`          | MATLAB script used to validate the implementation of Recommendation ITU-R P.1812-5 in `tl_p1812.m`             |
+|`tl_p1812.m`                | MATLAB function implementing Recommendation ITU-R P.1812-6          |
+|`validate_p1812.m`          | MATLAB script used to validate the implementation of Recommendation ITU-R P.1812-6 in `tl_p1812.m`             |
 |`./validation_profiles/`    | Folder containing a proposed set of terrain profiles and inputs for validation of MATLAB implementation (or any other software implementation) of this Recommendation |
 |`./validation_results/`	   | Folder containing all the results written during the transmission loss computations for the set of terrain profiles defined in the folder `./validation_profiles/` |
 |`./private/`   |             Folder containing the functions called by `tl_p1812.m` and `validate_p1812.m`|
@@ -20,27 +20,27 @@ The following table describes the structure of the folder `./matlab/` containing
 
 The function `tl_p1812` can be called
 
-1. by invoking only the required input arguments:
+
+1. by invoking only the required input arguments including latitude/longitude of Tx/Rx as Name-Value pairs:
 ~~~
-[Lb, Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, phi_t, phi_r, lam_t, lam_r, pol);
+[Lb,Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, pol,...
+    'phi_t', phi_t, 'phi_r', phi_r, 'lam_t', lam_t, 'lam_r', lam_r);
 ~~~
 
-2. by explicitly invoking all the input arguments (both required and optional):
+2. by invoking only the required input arguments including latitude of path centre as a Name-Value pair:
 ~~~
-[Lb, Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, phi_t, phi_r, lam_t, lam_r, pol, ...
-                    pL, sigmaLoc, Ptx, DN, N0, dct, dcr, flag4, debug, fid_log);
+[Lb,Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, pol, 'phi_path', phi_path);
 ~~~
-3. or by explicitly omitting some of the optional input arguments using []:
+3. by invoking optional input arguments as Name-Value pairs in addition to the required input arguments:
 ~~~
-[Lb, Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, phi_t, phi_r, lam_t, lam_r, pol, ... 
-                    pL, sigmaLoc, [], DN, N0, [], [], flag4, debug, fid_log);
+[Lb, Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, pol, 'phi_path', phi_path, 'DN', DN, 'N0', N0);
 ~~~
 
 ## Required input arguments of function `tl_p1812`
 
 | Variable          | Type   | Units | Limits       | Description  |
 |-------------------|--------|-------|--------------|--------------|
-| `f`               | scalar double | GHz   | 0.03 ≤ `f` ≤ 3 | Frequency   |
+| `f`               | scalar double | GHz   | 0.03 ≤ `f` ≤ 6 | Frequency   |
 | `p         `      | scalar double | %     | 1 ≤ `p` ≤ 50 | Time percentage for which the calculated basic transmission loss is not exceeded |
 | `d`               | array double | km    | ~0.25 ≤ `max(d)` ≤ ~3000 | Terrain profile distances (in the ascending order from the transmitter)|
 | `h`          | array double | m (asl)   |   | Terrain profile heights |
@@ -55,6 +55,7 @@ The function `tl_p1812` can be called
 | `lam_r`           | scalar double    | deg      |   -180 ≤ `lam_r`  ≤ 180          |  Longitude of Rx station |
 | `pol`           | scalar int    |       |   `pol`  = 1, 2          |  Polarization of the signal: 1 - horizontal, 2 - vertical |
 
+Instead of Tx/Rx latitudes and longitudes (`phi_t`, `phi_r`, `lam_t`, `lam_r`), one can include only the latitude of path center `phi_path`.
 
 ## Optional input arguments of function `tl_p1812`
 | Variable          | Type   | Units | Limits       | Description  |

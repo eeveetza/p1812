@@ -29,8 +29,8 @@ function Lbulls = dl_bull_att4(dtot, hte, hre, ap, f)
 Ce = 1/ap;
 
 % Wavelength in meters
-
-lambda = 0.3/f;
+% speed of light as per ITU.R P.2001
+lambda = 0.2998/f;
 
 
 % Calculate the marginal LoS distance for a smooth path
