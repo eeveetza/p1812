@@ -98,26 +98,9 @@ else
         
         Ldft = dl_se_ft(d, hte, hre, aem, f, omega);
         
-        if Ldft < 0
-            Ldsph = [0 0];
-            floatformat= '%.10g;\n';
-%             fid = fopen('Ldsph.csv', 'a');
-%             fprintf(fid,['dlos (km);Eq (22);;' floatformat],dlos);
-%             fprintf(fid,['hse (m);Eq (23);;' floatformat],hse);
-%             fprintf(fid,['dse1 (km);Eq (24a);;' floatformat],dse1);
-%             fprintf(fid,['dse2 (km);Eq (24b);;' floatformat],dse2);
-%             fprintf(fid,['b ;Eq (24c);;' floatformat],b);
-%             fprintf(fid,['c ;Eq (24d);;' floatformat],c);
-%             fprintf(fid,['mc ;Eq (24e);;' floatformat],m);
-%             fprintf(fid,['hreq (m);Eq (25);;' floatformat],hreq);
-%             fprintf(fid,['aem (km);Eq (26);;' floatformat],aem);
-%             fprintf(fid,['Ldsph (dB);Eq (27);;' floatformat],Ldsph(1));
-%             fprintf(fid,[';;;\n']);
-%             fclose(fid);
-            return
-        else
-            Ldsph = (1- hse/hreq)*Ldft;     % Eq (27)
-        end
+        Ldft(Ldft < 0) = 0;
+        Ldsph = (1- hse/hreq)*Ldft;     % Eq (27)       
+
     end
 end
 
