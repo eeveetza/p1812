@@ -25,7 +25,7 @@ function [Lbfs, Lb0p, Lb0b] = pl_los(d,  hts, hrs, f, p, b0, dlt, dlr)
 %     Lb0b    -   Basic transmission loss not exceedd for time percentage, b0%, due to LoS propagation
 %
 %     Example:
-%     [Lbfsg, Lb0p, Lb0b] = pl_los(d, hts, hrs, f, p, b0, dlt, dlr)
+%     [Lbfs, Lb0p, Lb0b] = pl_los(d, hts, hrs, f, p, b0, dlt, dlr)
 %
 %     Rev   Date        Author                          Description
 %     -------------------------------------------------------------------------------

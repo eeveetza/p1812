@@ -3,7 +3,7 @@ function I = inv_cum_norm( x )
 %   I = inv_cum_norm( x )
 %   This function implements an approximation to the inverse cummulative
 %   normal distribution function for 0<x<1 as defined in Attachment 2 to
-%   Annex 1 of the ITU-R P.1812-5
+%   Annex 1 of the ITU-R P.1812-6
 
 %     Rev   Date        Author                          Description
 %     -------------------------------------------------------------------------------

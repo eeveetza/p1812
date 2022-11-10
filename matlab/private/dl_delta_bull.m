@@ -1,9 +1,9 @@
 function [Ld, Lbulla, Lbulls, Ldsph] = dl_delta_bull( d, g, hts, hrs, hstd, hsrd, ap, f, omega, flag4 )
-%dl_delta_bull Complete 'delta-Bullington' diffraction loss model P.1812-4
+%dl_delta_bull Complete 'delta-Bullington' diffraction loss model P.1812-6
 %   function Ld = dl_delta_bull( d, h, hts, hrs, hstd, hsrd, ap, f, omega, flag4 )
 %
 %   This function computes the complete 'delta-Bullington' diffraction loss
-%   as defined in ITU-R P.1812-4 (Section 4.3.4)
+%   as defined in ITU-R P.1812-6 (Section 4.3.4)
 %
 %     Input parameters:
 %     d       -   vector of distances di of the i-th profile point (km)
@@ -17,17 +17,18 @@ function [Ld, Lbulla, Lbulls, Ldsph] = dl_delta_bull( d, g, hts, hrs, hstd, hsrd
 %     ap      -   the effective Earth radius in kilometers
 %     f       -   frequency expressed in GHz
 %     omega   -   the fraction of the path over sea
+%     flag4  -   Set to 1 if the alternative method is used to calculate Lbulls 
+%                without using terrain profile analysis (Attachment 4 to Annex 1)
 %
 %     Output parameters:
 %     Ld     -   diffraction loss for the general path according to
-%                Section 4.3.3 of ITU-R P.1812-4. 
+%                Section 4.3.3 of ITU-R P.1812-6. 
 %                Ld(1) is for the horizontal polarization 
 %                Ld(2) is for the vertical polarization
 %     Lbulla -   Bullington diffraction (4.3.1) for actual terrain profile g and antenna heights
 %     Lbulls -   Bullington diffraction (4.3.1) with all profile heights g set to zero and modified antenna heights
 %     Ldshp  -   Spherical diffraction (4.3.2) for the actual path d and modified antenna heights
-%     flag4  -   Set to 1 if the alternative method is used to calculate Lbulls 
-%                without using terrain profile analysis (Attachment 4 to Annex 1)
+
 %
 %     Example:
 %     [Ld, Lbulla, Lbulls, Ldsph] = dl_delta_bull( d, g, hts, hrs, hstd, hsrd, ap, f, omega, flag4)
@@ -64,7 +65,7 @@ dtot = d(end) - d(1);
 if (flag4 == 1)
     % compute the spherical earth diffraction Lbuls using an
     % alternative method w/o terrain profile analysis
-    % as defined in Attachment 4 to Annex 1 of ITU-R P.1812-5
+    % as defined in Attachment 4 to Annex 1 of ITU-R P.1812-6
     
     Lbulls = dl_bull_att4(dtot, hts1, hrs1, ap, f);
 

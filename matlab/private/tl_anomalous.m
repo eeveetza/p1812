@@ -1,10 +1,10 @@
 function Lba = tl_anomalous(dtot, dlt, dlr, dct, dcr, dlm, hts, hrs, hte, hre, hm, theta_t, theta_r, f, p, omega, ae, b0)
-%tl_anomalous Basic transmission loss due to anomalous propagation according to P.1812-4
+%tl_anomalous Basic transmission loss due to anomalous propagation according to P.1812-6
 %   Lba = tl_anomalous(dtot, dlt, dlr, dct, dcr, dlm, hts, hrs, hte, hre, hm, theta_t, theta_r, f, p, omega, ae, b0)
 %
 %   This function computes the basic transmission loss occuring during
 %   periods of anomalous propagation (ducting and layer reflection)
-%   as defined in ITU-R P.1812-4 (Section 4.5)
+%   as defined in ITU-R P.1812-6 (Section 4.5)
 %
 %     Input parameters:
 %     dtot         -   Great-circle path distance (km)

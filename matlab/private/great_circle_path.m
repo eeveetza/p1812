@@ -1,7 +1,7 @@
 function [Phipnte, Phipntn, Bt2r, dgc] = great_circle_path(Phire, Phite, Phirn, Phitn, Re, dpnt)
 %great_circle_path Great-circle path calculations according to Attachment H
 %   This function computes the great-circle intermediate points on the
-%   radio path as defined in ITU-R P.2001-2 Attachment H
+%   radio path as defined in ITU-R P.2001-4 Attachment H
 %
 %     Input parameters:
 %     Phire   -   Receiver longitude, positive to east (deg)

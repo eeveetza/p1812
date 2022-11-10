@@ -3,10 +3,10 @@ function   [ae, ab] = earth_rad_eff(DN)
 %     [ae, ab] = earth_rad_eff(DN)
 %     This function computes the median value of the effective earth
 %     radius, and the effective Earth radius exceeded for beta0% of time
-%     as defined in ITU-R P.1812-4.
+%     as defined in ITU-R P.1812-6.
 %
 %     Input arguments:
-%     DN      -   the average radiorefractive index lapse-rate through the
+%     DN      -   the average radio refractivity lapse-rate through the
 %                 lowest 1 km of the atmosphere (N-units/km)
 %
 %     Output arguments:

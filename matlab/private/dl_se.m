@@ -1,8 +1,8 @@
 function Ldsph = dl_se(d, hte, hre, ap, f, omega)
-%dl_se spherical-Earth diffraction loss exceeded for p% time according to ITU-R P.1812-4
+%dl_se spherical-Earth diffraction loss exceeded for p% time according to ITU-R P.1812-6
 %   This function computes the Spherical-Earth diffraction loss exceeded
 %   for p% time for antenna heights hte and hre (m)
-%   as defined in Sec. 4.3.2 of the ITU-R P.1812-4
+%   as defined in Sec. 4.3.2 of the ITU-R P.1812-6
 %
 %     Input parameters:
 %     d       -   Great-circle path distance (km)

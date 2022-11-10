@@ -1,8 +1,8 @@
 function Ldft = dl_se_ft(d, hte, hre, adft, f, omega)
-%dl_se_ft First-term part of spherical-Earth diffraction according to ITU-R P.1812-4
+%dl_se_ft First-term part of spherical-Earth diffraction according to ITU-R P.1812-6
 %   This function computes the first-term part of Spherical-Earth diffraction
 %   loss exceeded for p% time for antenna heights
-%   as defined in Sec. 4.3.3 of the ITU-R P.1812-4
+%   as defined in Sec. 4.3.3 of the ITU-R P.1812-6
 %
 %     Input parameters:
 %     d       -   Great-circle path distance (km)
