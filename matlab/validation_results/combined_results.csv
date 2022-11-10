@@ -1,7 +1,7 @@
 Folder,Filename,Dataset #,Reference,Predicted,Deviation: Predicted-Reference
-validation_profiles,b2iseac.csv,1,49.84494545,49.84494545,-0.00000000
-validation_profiles,b2iseac.csv,2,40.30671606,40.30671606,-0.00000000
-validation_profiles,b2iseac.csv,3,18.86840077,18.86840077,-0.00000000
+validation_profiles,b2iseac.csv,1,49.84494546,49.84494546,-0.00000000
+validation_profiles,b2iseac.csv,2,40.30671605,40.30671605,-0.00000000
+validation_profiles,b2iseac.csv,3,18.86840073,18.86840073,0.00000000
 validation_profiles,b2iseac_dense_urban_land.csv,1,49.84493926,49.84493926,0.00000000
 validation_profiles,b2iseac_dense_urban_land.csv,2,35.08714867,35.08714867,0.00000000
 validation_profiles,b2iseac_dense_urban_land.csv,3,18.86843045,18.86843045,0.00000000
@@ -32,9 +32,9 @@ validation_profiles,b2iseac_rural_land_1km.csv,3,91.45198697,91.45198697,-0.0000
 validation_profiles,b2iseac_rural_land_1km_eqdist.csv,1,86.80600700,86.80600700,0.00000000
 validation_profiles,b2iseac_rural_land_1km_eqdist.csv,2,86.53455026,86.53455026,0.00000000
 validation_profiles,b2iseac_rural_land_1km_eqdist.csv,3,86.34820522,86.34820522,0.00000000
-validation_profiles,b2iseac_vertical.csv,1,49.71955351,49.71955351,-0.00000000
-validation_profiles,b2iseac_vertical.csv,2,40.40569302,40.40569302,0.00000000
-validation_profiles,b2iseac_vertical.csv,3,19.45927687,19.45927687,0.00000000
+validation_profiles,b2iseac_vertical.csv,1,49.71941069,49.71941069,0.00000000
+validation_profiles,b2iseac_vertical.csv,2,40.40580540,40.40580540,0.00000000
+validation_profiles,b2iseac_vertical.csv,3,19.45997309,19.45997309,-0.00000000
 validation_profiles,rburg.csv,1,9.03336198,9.03336198,-0.00000000
 validation_profiles,rburg.csv,2,3.86560762,3.86560762,-0.00000000
 validation_profiles,rburg.csv,3,-1.58762765,-1.58762765,0.00000000
