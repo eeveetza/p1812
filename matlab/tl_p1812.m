@@ -1,6 +1,6 @@
-function [Lb, Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, pol, varargin)
+function [Lb, Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, pol, pdr, varargin)
 %tl_p1812 basic transmission loss according to P.1812-6
-%   [Lb Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, pol, varargin)
+%   [Lb Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, pol, pdr, varargin)
 %
 %   This is the MAIN function that computes the basic transmission loss not exceeded for p% time
 %   and pL% locations, including additional losses due to terminal surroundings
@@ -27,9 +27,10 @@ function [Lb, Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, pol, varargin)
 %     htg     -   Tx Antenna center heigth above ground level (m)
 %     hrg     -   Rx Antenna center heigth above ground level (m)
 %     pol     -   polarization of the signal (1) horizontal, (2) vertical
+%     pdr     -   pdr flag = 1, use PDR Troposcatter model
 %
 %    Input parameters related to path centre:
-%    EITHER the following are required:
+%    EITHER the following are required (specifically when pdr = 1:
 %
 %     phi_t    - latitude of Tx station (degrees)
 %     phi_r    - latitude of Rx station (degrees)
@@ -50,11 +51,11 @@ function [Lb, Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, pol, varargin)
 % Examples:
 %
 % 1) Call with required input parameters, and latitude/longitude of Tx/Rx:
-% [Lb,Ep] = tl_p1812(f,p,d,h,R,Ct,zone,htg,hrg,pol,...
+% [Lb,Ep] = tl_p1812(f,p,d,h,R,Ct,zone,htg,hrg,pol,pdr,...
 %     'phi_t',phi_t,'phi_r',phi_r,'lam_t',lam_t,'lam_r',lam_r)
 %
 % 2) Call with required input parameters, and latitude of path centre:
-% [Lb,Ep] = tl_p1812(f,p,d,h,R,Ct,zone,htg,hrg,pol,'phi_path',phi_path);
+% [Lb,Ep] = tl_p1812(f,p,d,h,R,Ct,zone,htg,hrg,pol,pdr,'phi_path',phi_path);
 %
 % 3) Call with Name-Value Pair Arguments. Name is the argument name and Value is the
 % corresponding value. Name must appear inside quotes.
@@ -67,14 +68,8 @@ function [Lb, Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, pol, varargin)
 %                 stdDev.m according to §4.8 and §4.10
 %                 the value of 5.5 dB used for planning Broadcasting DTT
 %     Ptx     -   Transmitter power (kW), default value 1 kW
-%     DN      -   The average radio-refractive index lapse-rate through the
-%                 lowest 1 km of the atmosphere (it is a positive quantity in this
-%                 procedure) (N-units/km)
-%     N0      -   The sea-level surface refractivity, is used only by the
-%                 troposcatter model as a measure of location variability of the
-%                 troposcatter mechanism. The correct values of DN and N0 are given by
-%                 the path-centre values as derived from the appropriate
-%                 maps (N-units)
+%     Gt, Gr  -   Antenna gain in the direction of the horizon along the
+%                 great-circle interference path (dBi)
 %     dct     -   Distance over land from the transmit and receive
 %     dcr         antennas to the coast along the great-circle interference path (km).
 %                 default values dct = 500 km, dcr = 500 km, or
@@ -116,9 +111,8 @@ function [Lb, Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, pol, varargin)
 %     v10   11FEB22     Ivica Stevanovic, OFCOM         Aligned with P.1812-6, renamed subfolder "src" into "private"
 %                                                       which is automatically in MATLAB search path ..
 %     v11   10MAR22     Ivica Stevanovic, OFCOM         Use comma as a separator in the written csv files instead of semicolon
-%
-
-% MATLAB Version 9.2.0.556344 (R2017a) used in development of this code
+%     v12   17MAR23     Ivica Stevanovic, OFCOM         Introduced troposcatter prediction model according to 3K/264 Annex 12
+% MATLAB Version 9.2.0.556344 (R2022a) used in development of this code
 %
 % The Software is provided "AS IS" WITH NO WARRANTIES, EXPRESS OR IMPLIED, 
 % INCLUDING BUT NOT LIMITED TO, THE WARRANTIES OF MERCHANTABILITY, FITNESS 
@@ -153,18 +147,22 @@ iP.addParameter('dct',500)
 iP.addParameter('dcr',500)
 iP.addParameter('flag4',0)
 iP.addParameter('debug',0)
+iP.addParameter('Gt',0)
+iP.addParameter('Gr',0)
 iP.addParameter('fid_log',[])
 iP.parse(varargin{:});
+
 
 % Unpack from input parser
 dcr = iP.Results.dcr;
 dct = iP.Results.dct;
 debug = iP.Results.debug;
-DN = iP.Results.DN;
 fid_log = iP.Results.fid_log;
 flag4 = iP.Results.flag4;
-N0 = iP.Results.N0;
+Gt = iP.Results.Gt;
+Gr = iP.Results.Gr;
 phi_path = iP.Results.phi_path;
+
 if isempty(phi_path)
     phi_t = iP.Results.phi_t;
     phi_r = iP.Results.phi_r;
@@ -176,7 +174,20 @@ if isempty(phi_path)
         mustBeNonempty(lam_t)
         mustBeNonempty(lam_r)
     end
+else
+    DN = iP.Results.DN;
+    N0 = iP.Results.N0;
 end
+
+if (pdr == 1)
+    if ( isempty(phi_t) || isempty(phi_r) || isempty(lam_t) || isempty(lam_r))
+        error('When pdf flag set to 1 the latitudes and longitudes of the terminals need to be specifically defined in the function call.');
+    end
+
+end
+
+% todo: check the consistency of the input parameters with and w/o pdr=1
+
 pL = iP.Results.pL;
 Ptx = iP.Results.Ptx;
 sigmaL = iP.Results.sigmaL;
@@ -254,8 +265,42 @@ end
 
 floatformat= '%.10g,\n';
 
+
+
+% Compute the path profile parameters
+
+% Path center latitude
+if isempty(phi_path)
+    Re = 6371;
+    dpnt = 0.5 .* (d(end)-d(1));
+    [phim_e, phim_n, bt2r, dgc] = great_circle_path(lam_r,lam_t,phi_r,phi_t,Re,dpnt);
+    phi_path = phim_n;
+
+    DN50 = DigitalMaps_DN50();
+    N050 = DigitalMaps_N050();
+
+    latcnt = 90:-1.5:-90;               %Table 2.4.1
+    loncnt = 0:1.5:360;                 %Table 2.4.1
+    [LON,LAT] = meshgrid(loncnt, latcnt);
+
+    % Map phicve (-180, 180) to loncnt (0,360);
+    phim_e1 = phim_e;
+    if phim_e1 < 0
+        phim_e1 = phim_e + 360;
+    end
+
+    % Find radio-refractivity lapse rate dN
+    % using the digital maps at phim_e (lon), phim_n (lat) - as a bilinear interpolation
+
+    DN = interp2(LON,LAT,DN50,phim_e1,phim_n);
+    N0 = interp2(LON,LAT,N050,phim_e1,phim_n);
+    clear DN50 N050
+end
+
+
 if (debug)
-    
+    % todo: handle the case when phi_path is defined and not phi and lam or
+    % tx and rx, the same with DN
     fprintf(fid_log,'# Parameter,Ref,,Value,\n');
     fprintf(fid_log,['Ptx (kW),,,' floatformat],Ptx);
     fprintf(fid_log,['f (GHz),,,' floatformat],f);
@@ -281,15 +326,6 @@ if (debug)
     
 end
 
-
-% Compute the path profile parameters
-
-% Path center latitude
-if isempty(phi_path)
-    Re = 6371;
-    dpnt = 0.5 .* (d(end)-d(1));
-    [~,phi_path] = great_circle_path(lam_r,lam_t,phi_r,phi_t,Re,dpnt);
-end
 
 % Compute  dtm     -   the longest continuous land (inland + coastal =34) section of the great-circle path (km)
 zone_r = 34;
@@ -443,7 +479,34 @@ Lbam = Lbda + (Lminb0p - Lbda)*Fj;   % eq (62)
 % Calculate the basic transmission loss due to troposcatter not exceeded
 % for any time percantage p
 
-Lbs = tl_tropo(dtot, theta, f, p, N0);
+if (~pdr)
+
+    Lbs = tl_tropo(dtot, theta, f, p, N0);
+
+else 
+
+    % The path length expressed as the angle subtended by d km at the center of
+    % a sphere of effective Earth radius ITU-R P.2001-4 (3.5.4)
+
+    theta_e = dtot/ae; % radians
+
+    % Calculate the horizon elevation angles limited such that they are positive
+
+    theta_tpos = max(theta_t, 0);                   % Eq (3.7.11a) ITU-R P.2001-4
+    theta_rpos = max(theta_r, 0);                   % Eq (3.7.11b) ITU-R P.2001-4
+
+    [dt_cv, phi_cve, phi_cvn] = tropospheric_path(dtot, hts, hrs, theta_e, theta_tpos, theta_rpos, lam_r, lam_t, phi_r, phi_t, Re);
+
+    % height of the Earth's surface above sea level where the common volume is located
+
+    Hs = surface_altitude_cv(h, d, dt_cv)/1000.0; % in km
+
+    Ht = (htg + h(1))/1000; % in km
+    Hr = (hrg + h(end))/1000; % in km
+    
+    [Lbs, theta_s] = tl_troposcatter_pdr(f, dtot, Ht, Hr, theta_t, theta_r, phi_cvn, phi_cve, Gt, Gr, p, Hs);
+       
+end    
 
 % Calculate the final transmission loss not exceeded for p% time
 % ignoring the effects of terminal clutter
