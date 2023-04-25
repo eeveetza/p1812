@@ -1,4 +1,4 @@
-P1812 Version 6.0 (22.05.22)
+P1812 Version 6.1 (25.04.23)
 
 MATLAB implementation of Recommendation ITU-R P.1812-6
 
@@ -31,36 +31,38 @@ Files and subfolders in the distribution .zip package.
 UPDATES AND FIXES
 -----------------
 
-Version 6.0 (22.05.22)
+Version 6.1 (25.04.23)
+        - Corrected an indexing issue in path_fraction.m and longest_cont_dist.m
+        - Corrected an issue in dl_se.m to cap to zero only the negative component of the loss
+        - Updated comments (recommendation version, refractive index -> refractivity, equation numbers)
+        - Equation (61) int tl_p1812.m rewritten separately for each polarization
+        - Updated validation files (minor numerical changes)
 
-	- Aligned to ITU-R P.1812-6 (excluded terminal clutter model, aligned free-space loss, extended frequency limit)
-	- Renamed subfolder "src" into "private" which is automatically in the MATLAB search path
-	- Simplified handling of (optional) input arguments using name-value pairs 
-	- Ensured that the variable series is a row vector in find_intervals.m
-	- Used 2.998e8 m/s for speed of light as per ITU-R P.2001-4 (instead of 3e8 m/s)
+Version 6.0 (22.05.22)
+        - Aligned to ITU-R P.1812-6 (excluded terminal clutter model, aligned free-space loss, extended frequency limit)
+        - Renamed subfolder "src" into "private" which is automatically in the MATLAB search path
+        - Simplified handling of (optional) input arguments using name-value pairs 
+        - Ensured that the variable series is a row vector in find_intervals.m
+        - Used 2.998e8 m/s for speed of light as per ITU-R P.2001-4 (instead of 3e8 m/s)
         - Use comma instead of semicolon as a separator in the output csv files 
 
 Version 5.4 (08.04.21)
-
-	- Introduced location variability for outdoor propagation
+        - Introduced location variability for outdoor propagation
         - Introduced alternative method to compute Lbulls w/o using 
           terrain profile (Attachment 4 to Annex 1)
 
 Version 4.1 (28.05.18)
-
-	- Corrected a bug (swap of long and lat coordinates in great_circle_path call, reported by Wladislaw Budynkiewicz.
-	- Corrected a bug in printing the values for Lbulla50 and Lbulls50 (scalar and not vector values) reported out by Damian Bevan
+        - Corrected a bug (swap of long and lat coordinates in great_circle_path call, reported by Wladislaw Budynkiewicz.
+        - Corrected a bug in printing the values for Lbulla50 and Lbulls50 (scalar and not vector values) reported out by Damian Bevan
         - Corrected a typo in error reporting for hrx
-	- Introduced path center calculation according to Annex H of Recommendation ITU-R P.2001-2
-	- Re-created validation examples so that they match the new path-center calculation (minor differences of the order 0.01 dB)
-	- Created two new validation examples to test for the case of vertical polarization
+        - Introduced path center calculation according to Annex H of Recommendation ITU-R P.2001-2
+        - Re-created validation examples so that they match the new path-center calculation (minor differences of the order 0.01 dB)
+        - Created two new validation examples to test for the case of vertical polarization
         - Added function isOctave to ensure compatibility with interactive plotting in Octave
         - Added an error message occuring in the case ./src/ is not on the MATLAB search path
 
-
-
 Version 1 (18.11.16)
-     - Initial implementation
+        - Initial implementation
 
 
 License and copyright notice
