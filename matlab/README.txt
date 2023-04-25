@@ -1,4 +1,4 @@
-P1812 Version 6.0 (22.05.22)
+P1812 Version 6.1 (25.04.23)
 
 MATLAB implementation of Recommendation ITU-R P.1812-6
 
@@ -30,6 +30,8 @@ Files and subfolders in the distribution .zip package.
 
 UPDATES AND FIXES
 -----------------
+Version 6.1-troposcatter (25.04.23)
+        - test version introducing troposcatter prediction method
 
 Version 6.0 (22.05.22)
 

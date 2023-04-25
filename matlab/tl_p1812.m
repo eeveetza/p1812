@@ -68,6 +68,14 @@ function [Lb, Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, pol, pdr, vararg
 %                 stdDev.m according to §4.8 and §4.10
 %                 the value of 5.5 dB used for planning Broadcasting DTT
 %     Ptx     -   Transmitter power (kW), default value 1 kW
+%     DN      -   The average radio-refractive index lapse-rate through the
+%                 lowest 1 km of the atmosphere (it is a positive quantity in this
+%                 procedure) (N-units/km)
+%     N0      -   The sea-level surface refractivity, is used only by the
+%                 troposcatter model as a measure of location variability of the
+%                 troposcatter mechanism. The correct values of DN and N0 are given by
+%                 the path-centre values as derived from the appropriate
+%                 maps (N-units)
 %     Gt, Gr  -   Antenna gain in the direction of the horizon along the
 %                 great-circle interference path (dBi)
 %     dct     -   Distance over land from the transmit and receive
@@ -112,6 +120,8 @@ function [Lb, Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, pol, pdr, vararg
 %                                                       which is automatically in MATLAB search path ..
 %     v11   10MAR22     Ivica Stevanovic, OFCOM         Use comma as a separator in the written csv files instead of semicolon
 %     v12   17MAR23     Ivica Stevanovic, OFCOM         Introduced troposcatter prediction model according to 3K/264 Annex 12
+%     v11   25APR23     Ivica Stevanovic, OFCOM         Introduced more efficient interpolatio and aligned with the rest of the Recommendation
+
 % MATLAB Version 9.2.0.556344 (R2022a) used in development of this code
 %
 % The Software is provided "AS IS" WITH NO WARRANTIES, EXPRESS OR IMPLIED, 
@@ -276,25 +286,10 @@ if isempty(phi_path)
     [phim_e, phim_n, bt2r, dgc] = great_circle_path(lam_r,lam_t,phi_r,phi_t,Re,dpnt);
     phi_path = phim_n;
 
-    DN50 = DigitalMaps_DN50();
-    N050 = DigitalMaps_N050();
+    DN = get_interp2('DN50',phim_e,phim_n);
+    N0 = get_interp2('N050',phim_e,phim_n);
 
-    latcnt = 90:-1.5:-90;               %Table 2.4.1
-    loncnt = 0:1.5:360;                 %Table 2.4.1
-    [LON,LAT] = meshgrid(loncnt, latcnt);
 
-    % Map phicve (-180, 180) to loncnt (0,360);
-    phim_e1 = phim_e;
-    if phim_e1 < 0
-        phim_e1 = phim_e + 360;
-    end
-
-    % Find radio-refractivity lapse rate dN
-    % using the digital maps at phim_e (lon), phim_n (lat) - as a bilinear interpolation
-
-    DN = interp2(LON,LAT,DN50,phim_e1,phim_n);
-    N0 = interp2(LON,LAT,N050,phim_e1,phim_n);
-    clear DN50 N050
 end
 
 
@@ -483,7 +478,7 @@ if (~pdr)
 
     Lbs = tl_tropo(dtot, theta, f, p, N0);
 
-else 
+else
 
     % The path length expressed as the angle subtended by d km at the center of
     % a sphere of effective Earth radius ITU-R P.2001-4 (3.5.4)
@@ -500,13 +495,10 @@ else
     % height of the Earth's surface above sea level where the common volume is located
 
     Hs = surface_altitude_cv(h, d, dt_cv)/1000.0; % in km
-
-    Ht = (htg + h(1))/1000; % in km
-    Hr = (hrg + h(end))/1000; % in km
     
-    [Lbs, theta_s] = tl_troposcatter_pdr(f, dtot, Ht, Hr, theta_t, theta_r, phi_cvn, phi_cve, Gt, Gr, p, Hs);
+    [Lbs, theta_s] = tl_troposcatter_pdr(f, dtot, hts, hrs, ae, theta_e, theta_t, theta_r, phi_cvn, phi_cve, Gt, Gr, p, Hs);
        
-end    
+end
 
 % Calculate the final transmission loss not exceeded for p% time
 % ignoring the effects of terminal clutter
