@@ -497,7 +497,7 @@ else
     Hs = surface_altitude_cv(h, d, dt_cv)/1000.0; % in km
     
     [Lbs, theta_s] = tl_troposcatter_pdr(f, dtot, hts, hrs, ae, theta_e, theta_t, theta_r, phi_cvn, phi_cve, Gt, Gr, p, Hs);
-       
+    Lbs = max(Lbs,Lbfs);   
 end
 
 % Calculate the final transmission loss not exceeded for p% time
