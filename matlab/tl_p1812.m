@@ -427,8 +427,12 @@ Lminbap = eta*log(exp(Lba/eta) + exp(Lb0p/eta));           % eq (60)
 
 Lbda = Lbd;
 
-if Lminbap <= Lbd
-    Lbda = Lminbap + (Lbd-Lminbap)*Fk; % eq (61)
+if Lminbap <= Lbd(1)
+    Lbda(1) = Lminbap + (Lbd(1)-Lminbap)*Fk; % eq (61)
+end
+
+if Lminbap <= Lbd(2)
+    Lbda(2) = Lminbap + (Lbd(2)-Lminbap)*Fk; % eq (61)
 end
 
 % Calculate a modified basic transmission loss, which takes diffraction and

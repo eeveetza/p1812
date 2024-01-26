@@ -1,8 +1,8 @@
 function [hst_n, hsr_n, hst, hsr, hstd, hsrd, hte, hre, hm, dlt, dlr, theta_t, theta_r, theta_tot, pathtype] = smooth_earth_heights(d, h, R, htg, hrg, ae, f)
-%smooth_earth_heights smooth-Earth effective antenna heights according to ITU-R P.1812-4
+%smooth_earth_heights smooth-Earth effective antenna heights according to ITU-R P.1812-6
 % [hst_n, hsr_n, hst, hsr, hstd, hsrd, hte, hre, hm, dlt, dlr, theta_t, theta_r, theta_tot, pathtype] = smooth_earth_heights(d, h, R, htg, hrg, ae, f)
 % This function derives smooth-Earth effective antenna heights according to
-% Sections 4 and 5 of the Attachment 1 to Annex 1 of ITU-R P.1812-4
+% Sections 4 and 5 of the Attachment 1 to Annex 1 of ITU-R P.1812-6
 %
 % Input parameters:
 % d         -   vector of terrain profile distances from Tx [0,dtot] (km)

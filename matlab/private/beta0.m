@@ -1,9 +1,9 @@
 function   b0 = beta0(phi, dtm, dlm)
 %%
-%     This function computes the time percentage for which refractive index
+%     This function computes the time percentage for which refractivity
 %     lapse-rates exceeding 100 N-units/km can be expected in the first 100
 %     m of the lower atmosphere
-%     as defined in ITU-R P.1812-4.
+%     as defined in ITU-R P.1812-6.
 %
 %     Input arguments:
 %     phi     -   path centre latitude (deg)
@@ -11,7 +11,7 @@ function   b0 = beta0(phi, dtm, dlm)
 %     dlm     -   the longest continuous inland section of the great-circle path (km)
 %
 %     Output arguments:
-%     b0      -   the time percentage that the refractivity gradient (DELTA-N) exceeds 100 N-units/km in the first 100m of the lower atmosphere
+%     b0      -   the time percentage that the refractivity gradient (DELTA-N) exceeds 100 N-units/km in the first 100 m of the lower atmosphere
 %
 %     Example:
 %     b0 = beta0(phi, dtm, dlm)

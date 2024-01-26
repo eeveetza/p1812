@@ -1,8 +1,9 @@
 function Lbulls = dl_bull_att4(dtot, hte, hre, ap, f)
-%dl_bull_att4 Bullington part of the diffraction loss for smooth path according to Attachment 4 to Annex 1 of P.1812-5
+%dl_bull_att4 Bullington part of the diffraction loss for smooth path
+%according to Attachment 4 to Annex 1 of P.1812-6
 %   This function computes the spherical earth diffraction Lbuls using an
 %   alternative method w/o terrain profile analysis
-%   as defined in Attachment 4 to Annex 1 of ITU-R P.1812-5
+%   as defined in Attachment 4 to Annex 1 of ITU-R P.1812-6
 %
 %     Input parameters:
 %     dtot    -   Great-circle path distance (km)
@@ -71,7 +72,7 @@ else % d>=dlos, NLoS
     
     % find the highest slope of the line from the receiver antenna to the curved-Earth path
     
-    Srm = 500*Ce*dtot - 2*sqrt(500.0*Ce*hre);           % Eq (108)                               % Eq (14)
+    Srm = 500*Ce*dtot - 2*sqrt(500.0*Ce*hre);           % Eq (108)                           
     
     % Use these two slopes to calculate the Bullington point as:
     

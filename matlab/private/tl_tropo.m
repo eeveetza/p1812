@@ -1,10 +1,10 @@
 function Lbs = tl_tropo(dtot, theta, f, p, N0 )
-%tl_tropo Basic transmission loss due to troposcatterer to P.1812-4
+%tl_tropo Basic transmission loss due to troposcatterer to P.1812-6
 %   Lbs = tl_tropo(dtot, theta, f, p, N0 )
 %
 %   This function computes the basic transmission loss due to troposcatterer 
 %   not exceeded for p% of time
-%   as defined in ITU-R P.1812-4 (Section 4.4)
+%   as defined in ITU-R P.1812-6 (Section 4.4)
 %
 %     Input parameters:
 %     dtot    -   Great-circle path distance (km)

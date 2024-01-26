@@ -2,7 +2,7 @@ function Ldft = dl_se_ft_inner(epsr, sigma, d, hte, hre, adft, f)
 %%dl_se_ft_inner The inner routine of the first-term spherical diffraction loss
 %   This function computes the first-term part of Spherical-Earth diffraction
 %   loss exceeded for p% time for antenna heights
-%   as defined in Sec. 4.3.3 of the ITU-R P.1812-4, equations (29-36)
+%   as defined in Sec. 4.3.3 of the ITU-R P.1812-6, equations (29-36)
 %
 %     Input parameters:
 %     epsr    -   Relative permittivity
@@ -15,7 +15,7 @@ function Ldft = dl_se_ft_inner(epsr, sigma, d, hte, hre, adft, f)
 %
 %     Output parameters:
 %     Ldft   -   The first-term spherical-Earth diffraction loss not exceeded for p% time
-%                implementing equations (30-37), Ldft(1) is for horizontal
+%                implementing equations (29-36), Ldft(1) is for horizontal
 %                and Ldft(2) for the vertical polarization
 %
 %     Example:
@@ -81,11 +81,11 @@ for ii = 1:2
         GYr(ii) = 20*log10(Br(ii) + 0.1* Br(ii).^3);
     end
     
-    if GYr(ii) < 2 + 20*log10(K(ii));
+    if GYr(ii) < 2 + 20*log10(K(ii))
         GYr(ii) = 2 + 20*log10(K(ii));
     end
     
-    if GYt(ii) < 2 + 20*log10(K(ii));
+    if GYt(ii) < 2 + 20*log10(K(ii))
         GYt(ii) = 2 + 20*log10(K(ii));
     end
     

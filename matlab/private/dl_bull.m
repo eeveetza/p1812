@@ -1,7 +1,7 @@
 function Lbull = dl_bull(d, g, hts, hrs, ap, f)
-%dl_bull Bullington part of the diffraction loss according to P.1812-4
+%dl_bull Bullington part of the diffraction loss according to P.1812-6
 %   This function computes the Bullington part of the diffraction loss
-%   as defined in ITU-R P.1812-4 in 4.3.1
+%   as defined in ITU-R P.1812-6 in 4.3.1
 %
 %     Input parameters:
 %     d       -   vector of distances di of the i-th profile point (km)
@@ -82,7 +82,7 @@ else
     % Calculate the diffraction parameter, nub, for the Bullington point
     
     nub =  ( hts + Stim*dbp - ( hts*(dtot - dbp) + hrs*dbp)/dtot ) * ...
-                   sqrt(0.002*dtot/(lambda*dbp*(dtot-dbp)));    % Eq (20)
+                   sqrt(0.002*dtot/(lambda*dbp*(dtot-dbp)));    % Eq (19)
     
     % The knife-edge loss for the Bullington point is given by
               
