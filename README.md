@@ -1,8 +1,6 @@
 # MATLAB/Octave Implementation of Recommendation ITU-R P.1812
 
-<!---
 [![DOI](https://zenodo.org/badge/459641442.svg)](https://zenodo.org/badge/latestdoi/459641442)
---->
 
 This code repository contains a MATLAB/Octave software implementation of [Recommendation ITU-R P.1812-6](https://www.itu.int/rec/R-REC-P.1812/en) with a path-specific propagation prediction method for point-to-area terrestrial services in the frequency range 30 MHz to 6000 MHz.  
 
