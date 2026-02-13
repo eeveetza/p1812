@@ -12,6 +12,7 @@
 % Author: Ivica Stevanovic (IS), Federal Office of Communications, Switzerland
 % Revision History:
 % Date            Revision
+% 10FEB26         Added handling of DN and N0 maps and aligned with Rec. ITU-R P.1812-8
 % 11FEB22         Aligned with ITU-R P.1812-6
 % 28JUL20         Introduced alternative method to compute Lbulls w/o using
 %                 terrain profile (Attachment 4 to Annex 1)
@@ -25,22 +26,15 @@ clear all;
 close all;
 fclose all;
 
-try
-    
-    % add path to the folder where the functions are defined
-    s = pwd;
-    if ~exist('read_sg3_measurements.m','file')
-        addpath([s '/private/'])
-    end
-    
-    if (isOctave)
-        page_screen_output(0);
-        page_output_immediately(1);
-    end
-catch
-    error('Folder ./private/ does not appear to be on Octave search path.');
-    
+tol = 1e-6;
+success = 0;
+total = 0;
+
+if (isOctave)
+    page_screen_output(0);
+    page_output_immediately(1);
 end
+
 
 % path to the folder containing test profiles
 test_profiles = './validation_profiles/';
@@ -289,6 +283,7 @@ for iname = 1 : length(filenames)
                 'flag4', flag4, ...
                 'debug', flag_debug, ...
                 'fid_log', sg3db.fid_log);
+
             
             %fprintf(1,',,%.8f,%.8f\n',sg3db.PredictedFieldStrength,sg3db.Lb)
         catch message
@@ -303,12 +298,17 @@ for iname = 1 : length(filenames)
         end
         if (flag_debug)
             fclose(fid_log);
-            
+            dev = sg3db.PredictedFieldStrength - sg3db.MeasuredFieldStrength(dataset);
             % print the deviation of the predicted from the measured value,
             % Measurement folder | Measurement File | Dataset | Measured Field Strength | Predicted Field Strength | Deviation from Measurement
-            fprintf(fid_all,'%s,%s,%d,%.8f,%.8f,%.8f\n',sg3db.MeasurementFolder,sg3db.MeasurementFileName,dataset, sg3db.MeasuredFieldStrength(dataset), sg3db.PredictedFieldStrength, sg3db.PredictedFieldStrength - sg3db.MeasuredFieldStrength(dataset));
+            fprintf(fid_all,'%s,%s,%d,%.8f,%.8f,%.8f\n',sg3db.MeasurementFolder,sg3db.MeasurementFileName,dataset, sg3db.MeasuredFieldStrength(dataset), sg3db.PredictedFieldStrength, dev);
             
         end
+
+        if (abs(dev) < tol)
+            success = success + 1;
+        end
+        total = total + 1;
         
     end
 end % for all files in ./tests
@@ -317,6 +317,11 @@ if (flag_debug)
     fclose(fid_all);
 end
 
-fprintf(1,'***********************************************\n');
+fprintf(1,'\n');
+fprintf(1, 'Validation results: %d out of %d tests passed successfully.\n', success, total);
+if (success == total)
+    fprintf(1,'The deviation from the reference results is smaller than %g dB.\n', tol);
+end
+fprintf(1,'\n***********************************************\n');
 fprintf(1,'Results are written in folder: %s \n', test_results);
 fprintf(1,'***********************************************\n');

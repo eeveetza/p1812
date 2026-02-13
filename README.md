@@ -2,19 +2,43 @@
 
 [![DOI](https://zenodo.org/badge/459641442.svg)](https://zenodo.org/badge/latestdoi/459641442)
 
-This code repository contains a MATLAB/Octave software implementation of [Recommendation ITU-R P.1812-6](https://www.itu.int/rec/R-REC-P.1812/en) with a path-specific propagation prediction method for point-to-area terrestrial services in the frequency range 30 MHz to 6000 MHz.  
+This code repository contains a MATLAB/Octave software implementation of [Recommendation ITU-R P.1812-8](https://www.itu.int/rec/R-REC-P.1812/en) with a path-specific propagation prediction method for point-to-area terrestrial services in the frequency range 30 MHz to 6000 MHz.  
 
-This version of the code corresponds to the reference version  approved by ITU-R Working Party 3K and published on [ITU-R SG 3 Software, Data, and Validation Web Page](https://www.itu.int/en/ITU-R/study-groups/rsg3/Pages/iono-tropo-spheric.aspx).
+<!--This version of the code corresponds to the reference version  approved by ITU-R Working Party 3K and published on [ITU-R SG 3 Software, Data, and Validation Web Page](https://www.itu.int/en/ITU-R/study-groups/rsg3/Pages/iono-tropo-spheric.aspx).
+-->
 
 The following table describes the structure of the folder `./matlab/` containing the MATLAB/Octave implementation of Recommendation ITU-R P.1812.
 
 | File/Folder               | Description                                                         |
 |----------------------------|---------------------------------------------------------------------|
-|`tl_p1812.m`                | MATLAB function implementing Recommendation ITU-R P.1812-6          |
-|`validate_p1812.m`          | MATLAB script used to validate the implementation of Recommendation ITU-R P.1812-6 in `tl_p1812.m`             |
+|`tl_p1812.m`                | MATLAB function implementing Recommendation ITU-R P.1812          |
+|`initiate_digital_maps.m`| MATLAB script that processes the ITU-R maps and generates the necessary functions. It needs to be run prior to using this software implementation. For details, see [Integrating ITU Digital Products](#integrating-itu-digital-products). |
+|`validate_p1812.m`          | MATLAB script used to validate the implementation of Recommendation ITU-R P.1812 in `tl_p1812.m`             |
 |`./validation_profiles/`    | Folder containing a proposed set of terrain profiles and inputs for validation of MATLAB implementation (or any other software implementation) of this Recommendation |
 |`./validation_results/`	   | Folder containing all the results written during the transmission loss computations for the set of terrain profiles defined in the folder `./validation_profiles/` |
 |`./private/`   |             Folder containing the functions called by `tl_p1812.m` and `validate_p1812.m`|
+
+
+## Integrating ITU Digital Products
+
+This software uses ITU digital products that are integral part of Recommendations. These products must not be reproduced or distributed without explicit written permission from the ITU.
+
+### Setup Instructions
+
+1. **Download and extract the required maps** to `./private/maps`:
+
+   - From [ITU-R P.1812-8](https://www.itu.int/dms_pubrec/itu-r/rec/p/R-REC-P.1812-8-202509-I!!ZIP-E.zip):
+     - `N050.TXT`
+     - `DN50.TXT`
+
+2. **Run the script** `initiate_digital_maps.m` to generate the necessary functions for retrieving and interpolating data from from the maps.
+
+### Notes
+
+- Ensure all files are placed in `./private/maps` before running the script.
+- The script processes the maps, which are critical for the software’s functionality.
+- The resulting `*.m` files are placed in the folder `./private`.
+
 
 ## Function Call
 
@@ -27,21 +51,23 @@ The function `tl_p1812` can be called
     'phi_t', phi_t, 'phi_r', phi_r, 'lam_t', lam_t, 'lam_r', lam_r);
 ~~~
 
-2. by invoking only the required input arguments including latitude of path centre as a Name-Value pair:
+2. by invoking only the required input arguments including latitude of path centre and the corresponding refractivities as Name-Value pairs:
 ~~~
-[Lb,Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, pol, 'phi_path', phi_path);
+[Lb,Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, pol, 'phi_path', phi_path, 'DN', DN, 'N0', N0);
 ~~~
-3. by invoking optional input arguments as Name-Value pairs in addition to the required input arguments:
+
+3. by invoking only the required input arguments with optional input arguments as Name-Value pairs:
 ~~~
-[Lb, Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, pol, 'phi_path', phi_path, 'DN', DN, 'N0', N0);
+[Lb,Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, pol, 'phi_path', phi_path, 'DN', DN, 'N0', N0, 'Ptx', 10, 'debug', 1);
 ~~~
+
 
 ## Required input arguments of function `tl_p1812`
 
 | Variable          | Type   | Units | Limits       | Description  |
 |-------------------|--------|-------|--------------|--------------|
 | `f`               | scalar double | GHz   | 0.03 ≤ `f` ≤ 6 | Frequency   |
-| `p         `      | scalar double | %     | 1 ≤ `p` ≤ 50 | Time percentage for which the calculated basic transmission loss is not exceeded |
+| `p`               | scalar double | %     | 1 ≤ `p` ≤ 50 | Time percentage for which the calculated basic transmission loss is not exceeded |
 | `d`               | array double | km    | ~0.25 ≤ `max(d)` ≤ ~3000 | Terrain profile distances (in the ascending order from the transmitter)|
 | `h`          | array double | m (asl)   |   | Terrain profile heights |
 | `R`           | array double    | m      |              |  Representative clutter heights |
@@ -55,7 +81,8 @@ The function `tl_p1812` can be called
 | `lam_r`           | scalar double    | deg      |   -180 ≤ `lam_r`  ≤ 180          |  Longitude of Rx station |
 | `pol`           | scalar int    |       |   `pol`  = 1, 2          |  Polarization of the signal: 1 - horizontal, 2 - vertical |
 
-Instead of Tx/Rx latitudes and longitudes (`phi_t`, `phi_r`, `lam_t`, `lam_r`), one can include only the latitude of path center `phi_path`.
+Instead of Tx/Rx latitudes and longitudes (`phi_t`, `phi_r`, `lam_t`, `lam_r`), one can include only the latitude of path center `phi_path`. In that case the 
+refractivities `DN`and `N0`need to be included as arguments of the function call.
 
 ## Optional input arguments of function `tl_p1812`
 | Variable          | Type   | Units | Limits       | Description  |
@@ -82,7 +109,7 @@ Instead of Tx/Rx latitudes and longitudes (`phi_t`, `phi_r`, `lam_t`, `lam_r`), 
 
 ## Software Versions
 The code was tested and runs on:
-* MATLAB versions 2017a and 2020a
+* MATLAB versions 2022
 * Octave version 6.1.0
 
 ## References

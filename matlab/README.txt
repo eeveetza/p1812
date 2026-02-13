@@ -1,25 +1,41 @@
-P1812 Version 6.1 (25.04.23)
+P1812 Version 8.0 (10.02.26)
 
-MATLAB implementation of Recommendation ITU-R P.1812-6
+MATLAB implementation of Recommendation ITU-R P.1812-8
 
 GENERAL NOTES
 --------------
 
 Files and subfolders in the distribution .zip package.
 
- tl_p1812.m                  - MATLAB function implementing Recommendation ITU-R P.1812-6.
+ tl_p1812.m                  - MATLAB function implementing Recommendation ITU-R P.1812-8.
+
+ initiate_digital_maps.m     - MATLAB script that processes the ITU-R maps and generates the necessary functions. 
+                               This software uses ITU digital products that are integral part of Recommendations. 
+                               These products must not be reproduced or distributed 
+                               without explicit written permission from the ITU.
+
+                               a) Download and extract the required maps to `./private/maps` 
+                                  From https://www.itu.int/dms_pubrec/itu-r/rec/p/R-REC-P.1812-8-202509-I!!ZIP-E.zip:
+                                  - N050.TXT
+                                  - DN50.TXT
+                            
+                               b) Run the script `initiate_digital_maps.m` to generate the necessary functions for 
+                                  retrieving and interpolating data. 
+                                  The resulting `*.m` files are placed in the folder `./private`.
+   
+
 
  validate_p1812.m            - MATLAB script used to validate the implementation of 
-                               Recommendation ITU-R P.1812-6 as defined in the file 
+                               Recommendation ITU-R P.1812 as defined in the file 
                                tl_p1812.m using a set of test terrain profiles provided 
                                in the folder ./validation_profiles/
 
  ./validation_profiles/	     - Folder containing a proposed set of terrain profiles for
                                validation of MATLAB implementation (or any other software
-                               implementation) of Recommendation ITU-R P.1812-6
+                               implementation) of Recommendation ITU-R P.1812
 
- validation_result_log.csv  - Template for reporting final and intermediate results of basic
-                               transmission loss computation according to Recommendation ITU-R P.1812-6
+ validation_result_log.csv   - Template for reporting final and intermediate results of basic
+                               transmission loss computation according to Recommendation ITU-R P.1812
 
  ./validation_results/       - Folder containing all the results written during the transmission loss
                                computations for the set of terrain profiles defined
@@ -30,6 +46,10 @@ Files and subfolders in the distribution .zip package.
 
 UPDATES AND FIXES
 -----------------
+
+Version 8.0 (10.02.26)
+        - Added handling DN and N0 maps
+        - Aligned with Rec. ITU-R P.1812-8
 
 Version 6.1 (25.04.23)
         - Corrected an indexing issue in path_fraction.m and longest_cont_dist.m

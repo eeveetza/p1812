@@ -1,11 +1,11 @@
 function [Lb, Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, pol, varargin)
-%tl_p1812 basic transmission loss according to P.1812-6
+%tl_p1812 basic transmission loss according to P.1812-8
 %   [Lb Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, pol, varargin)
 %
 %   This is the MAIN function that computes the basic transmission loss not exceeded for p% time
 %   and pL% locations, including additional losses due to terminal surroundings
 %   and the field strength exceeded for p% time and pL% locations
-%   as defined in ITU-R P.1812-6.
+%   as defined in ITU-R P.1812-8.
 %   This function:
 %   does not include the building entry loss (only outdoor scenarios implemented)
 %
@@ -39,11 +39,19 @@ function [Lb, Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, pol, varargin)
 %    OR the following are required:
 %
 %     phi_path - latitude of the path centre (degrees)
+%     DN       - The average radio-refractivity lapse-rate through the
+%                lowest 1 km of the atmosphere (it is a positive quantity in this
+%                procedure) (N-units/km)
+%     N0       - The sea-level surface refractivity, is used only by the
+%                troposcatter model as a measure of location variability of the
+%                troposcatter mechanism. The correct values of DN and N0 are given by
+%                the path-centre values as derived from the appropriate
+%                maps (N-units)
 %
 %   Examples of both cases are provided below.
 %
 %   Output parameters:
-%     Lb   - basic transmission loss according to P.1812-6
+%     Lb   - basic transmission loss according to P.1812
 %     Ep   - the field strength relative to Ptx
 %
 %
@@ -53,8 +61,8 @@ function [Lb, Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, pol, varargin)
 % [Lb,Ep] = tl_p1812(f,p,d,h,R,Ct,zone,htg,hrg,pol,...
 %     'phi_t',phi_t,'phi_r',phi_r,'lam_t',lam_t,'lam_r',lam_r)
 %
-% 2) Call with required input parameters, and latitude of path centre:
-% [Lb,Ep] = tl_p1812(f,p,d,h,R,Ct,zone,htg,hrg,pol,'phi_path',phi_path);
+% 2) Call with required input parameters, and latitude of path centre, DN and N0:
+% [Lb,Ep] = tl_p1812(f,p,d,h,R,Ct,zone,htg,hrg,pol,'phi_path',phi_path, 'DN', DN, 'N0', N0);
 %
 % 3) Call with Name-Value Pair Arguments. Name is the argument name and Value is the
 % corresponding value. Name must appear inside quotes.
@@ -67,7 +75,7 @@ function [Lb, Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, pol, varargin)
 %                 stdDev.m according to §4.8 and §4.10
 %                 the value of 5.5 dB used for planning Broadcasting DTT
 %     Ptx     -   Transmitter power (kW), default value 1 kW
-%     DN      -   The average radio-refractive index lapse-rate through the
+%     DN      -   The average radio-refractivity lapse-rate through the
 %                 lowest 1 km of the atmosphere (it is a positive quantity in this
 %                 procedure) (N-units/km)
 %     N0      -   The sea-level surface refractivity, is used only by the
@@ -87,11 +95,6 @@ function [Lb, Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, pol, varargin)
 %                 provided, if not, the default file with a file
 %                 containing a timestamp will be created
 %
-
-
-
-%
-% Numbers refer to Rec. ITU-R P.1812-6
 
 %     Rev   Date        Author                          Description
 %     -------------------------------------------------------------------------------
@@ -116,9 +119,10 @@ function [Lb, Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, pol, varargin)
 %     v10   11FEB22     Ivica Stevanovic, OFCOM         Aligned with P.1812-6, renamed subfolder "src" into "private"
 %                                                       which is automatically in MATLAB search path ..
 %     v11   10MAR22     Ivica Stevanovic, OFCOM         Use comma as a separator in the written csv files instead of semicolon
+%     v12   10FEB26     Ivica Stevanovic, OFCOM         Added handling of DN and N0 maps and aligned with Rec. ITU-R P.1812-8
 %
 
-% MATLAB Version 9.2.0.556344 (R2017a) used in development of this code
+% MATLAB Version 9.12.0.1975300 (R2022a) used in development of this code
 %
 % The Software is provided "AS IS" WITH NO WARRANTIES, EXPRESS OR IMPLIED, 
 % INCLUDING BUT NOT LIMITED TO, THE WARRANTIES OF MERCHANTABILITY, FITNESS 
@@ -147,8 +151,8 @@ iP.addParameter('lam_r',[],@(x) isnumeric(x))
 iP.addParameter('pL',50,@(x) isnumeric(x) && x>=1 && x<=99)
 iP.addParameter('sigmaL',0)
 iP.addParameter('Ptx',1)
-iP.addParameter('DN',45)
-iP.addParameter('N0',325)
+iP.addParameter('DN',[])
+iP.addParameter('N0',[])
 iP.addParameter('dct',500)
 iP.addParameter('dcr',500)
 iP.addParameter('flag4',0)
@@ -160,21 +164,40 @@ iP.parse(varargin{:});
 dcr = iP.Results.dcr;
 dct = iP.Results.dct;
 debug = iP.Results.debug;
-DN = iP.Results.DN;
+
 fid_log = iP.Results.fid_log;
 flag4 = iP.Results.flag4;
-N0 = iP.Results.N0;
+
 phi_path = iP.Results.phi_path;
+DN = iP.Results.DN;
+N0 = iP.Results.N0;
+
 if isempty(phi_path)
     phi_t = iP.Results.phi_t;
     phi_r = iP.Results.phi_r;
     lam_t = iP.Results.lam_t;
     lam_r = iP.Results.lam_r;
+    % Calculate the longitude and latitude of the mid-point of the path, phim_e,
+    % and phim_n for dpnt = 0.5dt
+    if (isempty(DN) && isempty(N0))
+        Re = 6371;
+        dpnt = 0.5*(d(end)-d(1));
+        [lam_m, phi_m, ~, ~] = great_circle_path(lam_r, lam_t, phi_r, phi_t, Re, dpnt);
+        % Find radio-refractivity lapse rate dN
+        % using the digital maps at phi_m (lon), lam_m (lat) - as a bilinear interpolation
+        DN = get_interp2('DN50',lam_m,phi_m);
+        N0 = get_interp2('N050',lam_m,phi_m);
+
+    end
     if(~isOctave())
         mustBeNonempty(phi_t)
         mustBeNonempty(phi_r)
         mustBeNonempty(lam_t)
         mustBeNonempty(lam_r)
+    end
+else
+    if (isempty(DN) || isempty(N0))
+        error("Missing parameter: the latitude of the path centre (phi_path) must be defined together with DN and N0.")
     end
 end
 pL = iP.Results.pL;
@@ -262,10 +285,14 @@ if (debug)
     fprintf(fid_log,['p (%%),,,' floatformat],p);
     fprintf(fid_log,['pL (%%),,,' floatformat],pL);
     fprintf(fid_log,['sigmaL (dB),,,' floatformat],sigmaL);
-    fprintf(fid_log,['phi_t (deg),,,' floatformat],phi_t);
-    fprintf(fid_log,['phi_r (deg),,,' floatformat],phi_r);
-    fprintf(fid_log,['lam_t (deg),,,' floatformat],lam_t);
-    fprintf(fid_log,['lam_r (deg),,,' floatformat],lam_r);
+    if isempty(phi_path)
+        fprintf(fid_log,['phi_t (deg),,,' floatformat],phi_t);
+        fprintf(fid_log,['phi_r (deg),,,' floatformat],phi_r);
+        fprintf(fid_log,['lam_t (deg),,,' floatformat],lam_t);
+        fprintf(fid_log,['lam_r (deg),,,' floatformat],lam_r);
+    else
+        fprintf(fid_log, ['phi_path (deg),,,' floatformat],phi_path);
+    end
     fprintf(fid_log,['htg (m),,,' floatformat],htg);
     fprintf(fid_log,['hrg (m),,,' floatformat],hrg);
     fprintf(fid_log,['pol,,,' '%d,\n'],pol);
