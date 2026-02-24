@@ -11,9 +11,9 @@ The following table describes the structure of the folder `./matlab/` containing
 
 | File/Folder               | Description                                                         |
 |----------------------------|---------------------------------------------------------------------|
-|`tl_p1812.m`                | MATLAB function implementing Recommendation ITU-R P.1812          |
+|`tl_p1812.m`                | MATLAB function implementing Recommendation ITU-R P.1812-6          |
 |`initiate_digital_maps.m`| MATLAB script that processes the ITU-R maps and generates the necessary functions. It needs to be run prior to using this software implementation. For details, see [Integrating ITU Digital Products](#integrating-itu-digital-products). |
-|`validate_p1812.m`          | MATLAB script used to validate the implementation of Recommendation ITU-R P.1812 in `tl_p1812.m`             |
+|`validate_p1812.m`          | MATLAB script used to validate the implementation of Recommendation ITU-R P.1812-6 in `tl_p1812.m`             |
 |`./validation_profiles/`    | Folder containing a proposed set of terrain profiles and inputs for validation of MATLAB implementation (or any other software implementation) of this Recommendation |
 |`./validation_results/`	   | Folder containing all the results written during the transmission loss computations for the set of terrain profiles defined in the folder `./validation_profiles/` |
 |`./private/`   |             Folder containing the functions called by `tl_p1812.m` and `validate_p1812.m`|
@@ -47,18 +47,18 @@ The function `tl_p1812` can be called
 
 1. by invoking only the required input arguments including latitude/longitude of Tx/Rx as Name-Value pairs:
 ~~~
-[Lb,Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, pol,...
+[Lb,Ep] = tl_p1812(f, p, d, h, R, zone, htg, hrg, pol,...
     'phi_t', phi_t, 'phi_r', phi_r, 'lam_t', lam_t, 'lam_r', lam_r);
 ~~~
 
-2. by invoking only the required input arguments including latitude of path centre and the corresponding refractivities as Name-Value pairs:
+2. by invoking only the required input arguments including latitude of path centre and the corresponding refractivities as a Name-Value pair:
 ~~~
-[Lb,Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, pol, 'phi_path', phi_path, 'DN', DN, 'N0', N0);
+[Lb,Ep] = tl_p1812(f, p, d, h, R, zone, htg, hrg, pol, 'phi_path', phi_path, 'DN', DN, 'N0', N0);
 ~~~
 
-3. by invoking only the required input arguments with optional input arguments as Name-Value pairs:
+3. by invoking only the required input arguments with optional input arguments a Name-Value pair:
 ~~~
-[Lb,Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, pol, 'phi_path', phi_path, 'DN', DN, 'N0', N0, 'Ptx', 10, 'debug', 1);
+[Lb,Ep] = tl_p1812(f, p, d, h, R, zone, htg, hrg, pol, 'phi_path', phi_path, 'DN', DN, 'N0', N0, 'Ptx', 10, 'debug', 1);
 ~~~
 
 
@@ -67,11 +67,10 @@ The function `tl_p1812` can be called
 | Variable          | Type   | Units | Limits       | Description  |
 |-------------------|--------|-------|--------------|--------------|
 | `f`               | scalar double | GHz   | 0.03 ≤ `f` ≤ 6 | Frequency   |
-| `p`               | scalar double | %     | 1 ≤ `p` ≤ 50 | Time percentage for which the calculated basic transmission loss is not exceeded |
+| `p         `      | scalar double | %     | 1 ≤ `p` ≤ 50 | Time percentage for which the calculated basic transmission loss is not exceeded |
 | `d`               | array double | km    | ~0.25 ≤ `max(d)` ≤ ~3000 | Terrain profile distances (in the ascending order from the transmitter)|
 | `h`          | array double | m (asl)   |   | Terrain profile heights |
 | `R`           | array double    | m      |              |  Representative clutter heights |
-| `Ct`           | array int    |       |  1 - Water/sea, 2 - Open/rural, 3 - Suburban, 4 - Urban/trees/forest, 5 - Dense urban             |  Array of representative clutter types. If empty or all zeros, the default clutter type used is Open/rural |
 | `zone`           | array int    |       | 1 - Sea, 3 - Coastal land, 4 - Inland             |  Radio-climatic zone types |
 | `htg`           | scalar double    | m      |   1 ≤ `htg`  ≤ 3000          |  Tx antenna height above ground level |
 | `hrg`           | scalar double    | m      |   1 ≤ `hrg`  ≤ 3000          |  Rx antenna height above ground level |
