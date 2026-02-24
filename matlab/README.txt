@@ -1,4 +1,4 @@
-P1812 Version 8.0 (10.02.26)
+P1812 Version 8.0 (24.02.26)
 
 MATLAB implementation of Recommendation ITU-R P.1812-8
 
@@ -47,9 +47,10 @@ Files and subfolders in the distribution .zip package.
 UPDATES AND FIXES
 -----------------
 
-Version 8.0 (10.02.26)
+Version 8.0 (24.02.26)
         - Added handling DN and N0 maps
         - Aligned with Rec. ITU-R P.1812-8
+        - Removed the obsolete argument Ct
 
 Version 6.1 (25.04.23)
         - Corrected an indexing issue in path_fraction.m and longest_cont_dist.m

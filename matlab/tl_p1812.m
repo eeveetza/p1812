@@ -1,11 +1,11 @@
-function [Lb, Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, pol, varargin)
+function [Lb, Ep] = tl_p1812(f, p, d, h, R, zone, htg, hrg, pol, varargin)
 %tl_p1812 basic transmission loss according to P.1812-8
-%   [Lb Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, pol, varargin)
+%   [Lb Ep] = tl_p1812(f, p, d, h, R, zone, htg, hrg, pol, varargin)
 %
 %   This is the MAIN function that computes the basic transmission loss not exceeded for p% time
 %   and pL% locations, including additional losses due to terminal surroundings
 %   and the field strength exceeded for p% time and pL% locations
-%   as defined in ITU-R P.1812-8.
+%   as defined in ITU-R P.1812.
 %   This function:
 %   does not include the building entry loss (only outdoor scenarios implemented)
 %
@@ -19,10 +19,6 @@ function [Lb, Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, pol, varargin)
 %     h       -   vector of heights hi of the i-th profile point (meters
 %                 above mean sea level.
 %     R       -   vector of representative clutter height Ri of the i-th profile point (m)
-%     Ct      -   vector of representative clutter type Cti of the i-th profile point
-%                 Water/sea (1), Open/rural (2), Suburban (3),
-%                 Urban/trees/forest (4), Dense urban (5)
-%                 if empty or all zeros, the default clutter used is Open/rural
 %     zone    -   vector of radio-climatic zone types: Inland (4), Coastal land (3), or Sea (1)
 %     htg     -   Tx Antenna center heigth above ground level (m)
 %     hrg     -   Rx Antenna center heigth above ground level (m)
@@ -58,16 +54,16 @@ function [Lb, Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, pol, varargin)
 % Examples:
 %
 % 1) Call with required input parameters, and latitude/longitude of Tx/Rx:
-% [Lb,Ep] = tl_p1812(f,p,d,h,R,Ct,zone,htg,hrg,pol,...
+% [Lb,Ep] = tl_p1812(f,p,d,h,R,zone,htg,hrg,pol,...
 %     'phi_t',phi_t,'phi_r',phi_r,'lam_t',lam_t,'lam_r',lam_r)
 %
 % 2) Call with required input parameters, and latitude of path centre, DN and N0:
-% [Lb,Ep] = tl_p1812(f,p,d,h,R,Ct,zone,htg,hrg,pol,'phi_path',phi_path, 'DN', DN, 'N0', N0);
+% [Lb,Ep] = tl_p1812(f,p,d,h,R,zone,htg,hrg,pol,'phi_path',phi_path, 'DN', DN, 'N0', N0);
 %
 % 3) Call with Name-Value Pair Arguments. Name is the argument name and Value is the
 % corresponding value. Name must appear inside quotes.
 % [Lb,Ep] = tl_p1812(___,Name,Value)
-% Example: tl_p1812(f,p,d,h,R,Ct,zone,htg,hrg,pol,'phi_path',phi_path,'DN',DN,'N0',N0)
+% Example: tl_p1812(f,p,d,h,R,zone,htg,hrg,pol,'phi_path',phi_path,'DN',DN,'N0',N0)
 % Below are the valid Name-Value Pair Arguments:
 %     pL      -   Required time percentage for which the calculated basic
 %                 transmission loss is not exceeded (1% - 99%)
@@ -119,7 +115,8 @@ function [Lb, Ep] = tl_p1812(f, p, d, h, R, Ct, zone, htg, hrg, pol, varargin)
 %     v10   11FEB22     Ivica Stevanovic, OFCOM         Aligned with P.1812-6, renamed subfolder "src" into "private"
 %                                                       which is automatically in MATLAB search path ..
 %     v11   10MAR22     Ivica Stevanovic, OFCOM         Use comma as a separator in the written csv files instead of semicolon
-%     v12   10FEB26     Ivica Stevanovic, OFCOM         Added handling of DN and N0 maps and aligned with Rec. ITU-R P.1812-8
+%     v12   24FEB26     Ivica Stevanovic, OFCOM         Added handling of DN and N0 maps and aligned with Rec. ITU-R P.1812-8
+%                                                       Removed obsolete argument Ct 
 %
 
 % MATLAB Version 9.12.0.1975300 (R2022a) used in development of this code
@@ -211,7 +208,6 @@ check_limit(p, 1, 50, 'p [%]');
 check_limit(htg, 1, 3000, 'htg [m]');
 check_limit(hrg, 1, 3000, 'hrg [m]');
 check_value(pol, [1, 2], 'Polarization (pol) ');
-%check_value(Ct, [1, 2, 3, 4, 5], 'Clutter coverage (Ct) ');
 check_value(zone, [1, 3, 4], 'Radio-climatic zone (zone) ');
 
 NN=length(d);
@@ -226,17 +222,6 @@ if isempty(R)
 else
     if(length(R) ~= NN)
         error('The number of elements in the array ''d'' and array ''R'' must be the same.')
-    end
-end
-
-if isempty(Ct)
-    Ct = 2*ones(size(h)); % default is Open/rural clutter type
-    
-elseif Ct == 0
-    Ct = 2*ones(size(h)); % default is Open/rural clutter type
-else
-    if(length(Ct) ~= NN)
-        error('The number of elements in the array ''d'' and array ''Ct'' must be the same.')
     end
 end
 
@@ -303,8 +288,6 @@ if (debug)
     fprintf(fid_log,['dcr (km) ,,,' floatformat],dcr);
     fprintf(fid_log,['R2 (m) ,,,' floatformat],R(2));
     fprintf(fid_log,['Rn-1 (m) ,,,' floatformat],R(end-1));
-    fprintf(fid_log,['Ct Tx ,Table 2,,' floatformat],Ct(2));
-    fprintf(fid_log,['Ct Rx ,Table 2,,' floatformat],Ct(end-1));
     
 end
 
