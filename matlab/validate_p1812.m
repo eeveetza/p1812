@@ -87,7 +87,7 @@ if (flag_debug==1)
     if (fid_all == -1)
         error('The file combined_results.csv could not be opened');
     end
-    fprintf(fid_all,'%s,%s,%s,%s,%s,%s\n','Folder','Filename','Dataset #','Reference','Predicted','Deviation: Predicted-Reference');
+    fprintf(fid_all,'%s,%s,%s,%s,%s,%s\n','Folder','Filename','Dataset #','Reference','Predicted','iation: Predicted-Reference');
 end
 
 if (length(filenames) < 1)
@@ -295,9 +295,12 @@ for iname = 1 : length(filenames)
             
             
         end
+
+        dev = sg3db.PredictedFieldStrength - sg3db.MeasuredFieldStrength(dataset);
+        
         if (flag_debug)
             fclose(fid_log);
-            dev = sg3db.PredictedFieldStrength - sg3db.MeasuredFieldStrength(dataset);
+            
             % print the deviation of the predicted from the measured value,
             % Measurement folder | Measurement File | Dataset | Measured Field Strength | Predicted Field Strength | Deviation from Measurement
             fprintf(fid_all,'%s,%s,%d,%.8f,%.8f,%.8f\n',sg3db.MeasurementFolder,sg3db.MeasurementFileName,dataset, sg3db.MeasuredFieldStrength(dataset), sg3db.PredictedFieldStrength, dev);

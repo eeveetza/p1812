@@ -176,14 +176,18 @@ if isempty(phi_path)
     lam_r = iP.Results.lam_r;
     % Calculate the longitude and latitude of the mid-point of the path, phim_e,
     % and phim_n for dpnt = 0.5dt
-    if (isempty(DN) && isempty(N0))
+    if (isempty(DN) || isempty(N0))
         Re = 6371;
         dpnt = 0.5*(d(end)-d(1));
         [lam_m, phi_m, ~, ~] = great_circle_path(lam_r, lam_t, phi_r, phi_t, Re, dpnt);
         % Find radio-refractivity lapse rate dN
         % using the digital maps at phi_m (lon), lam_m (lat) - as a bilinear interpolation
-        DN = get_interp2('DN50',lam_m,phi_m);
-        N0 = get_interp2('N050',lam_m,phi_m);
+        if (isempty(DN))
+            DN = get_interp2('DN50',lam_m,phi_m);
+        end
+        if (isempty(N0))
+            N0 = get_interp2('N050',lam_m,phi_m);
+        end
 
     end
     if(~isOctave())
@@ -209,6 +213,12 @@ check_limit(htg, 1, 3000, 'htg [m]');
 check_limit(hrg, 1, 3000, 'hrg [m]');
 check_value(pol, [1, 2], 'Polarization (pol) ');
 check_value(zone, [1, 3, 4], 'Radio-climatic zone (zone) ');
+if (~all(diff(d) > 0))
+    error('The elements of the array ''d'' need to be in strictly ascending order.');
+end
+if (d(1) ~= 0)
+    error('The first element of the array ''d'' needs to be zero.');
+end
 
 NN=length(d);
 
