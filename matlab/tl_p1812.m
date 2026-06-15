@@ -216,7 +216,7 @@ check_value(zone, [1, 3, 4], 'Radio-climatic zone (zone) ');
 if (~all(diff(d) > 0))
     error('The elements of the array ''d'' need to be in strictly ascending order.');
 end
-if (d(0) ~= 0)
+if (d(1) ~= 0)
     error('The first element of the array ''d'' needs to be zero.');
 end
 
