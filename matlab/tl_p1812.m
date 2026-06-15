@@ -213,6 +213,12 @@ check_limit(htg, 1, 3000, 'htg [m]');
 check_limit(hrg, 1, 3000, 'hrg [m]');
 check_value(pol, [1, 2], 'Polarization (pol) ');
 check_value(zone, [1, 3, 4], 'Radio-climatic zone (zone) ');
+if (~all(diff(d) > 0))
+    error('The elements of the array ''d'' need to be in strictly ascending order.');
+end
+if (d(0) ~= 0)
+    error('The first element of the array ''d'' needs to be zero.');
+end
 
 NN=length(d);
 
